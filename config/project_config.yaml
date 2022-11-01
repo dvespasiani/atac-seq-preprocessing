@@ -1,0 +1,7 @@
+##----------------------------------------
+## Project I/O dirs
+##----------------------------------------
+baseDir:  /stornext/General/data/user_managed/grpu_jchoi_0/projects/davide/
+project: atac-pipeline
+modules: /stornext/General/data/user_managed/grpu_jchoi_0/projects/davide/atac-pipeline/config/modules.txt
+
