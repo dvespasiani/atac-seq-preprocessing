@@ -8,7 +8,6 @@
     - [Adaptor trimming](#adaptor-trimming)
     - [Genome alignment](#genome-alignment)
     - [Peak calling](#peak-calling)
-  - [To call peaks of chromatin accessiblity I am using MACS2 on Tn5-shifted BAM files . MACS2 parameters are defined as per ENCODE.](#to-call-peaks-of-chromatin-accessiblity-i-am-using-macs2-on-tn5-shifted-bam-files--macs2-parameters-are-defined-as-per-encode)
   - [QCs](#qcs)
     - [Get peak and read counts](#get-peak-and-read-counts)
     - [Estimate library complexity](#estimate-library-complexity)
@@ -94,9 +93,10 @@ I am using Trimmomatic to remove Illumina Nextera adapter sequeces which I have 
 
 ### Genome alignment 
 I am using Bowtie2 to align reads to the genome assembly of the species of interest. Bowtie2 alignment parameters are defined as per ENCODE.
+
 ### Peak calling
-To call peaks of chromatin accessiblity I am using MACS2 on Tn5-shifted BAM files . MACS2 parameters are defined as per ENCODE.
------
+To call peaks of chromatin accessiblity I am using MACS2 on Tn5-shifted BAM files. MACS2 parameters are defined as per ENCODE.
+
 ## QCs
 Here I am listing a series of QCs the snakemake pipeline will automatically run for you plus some others you can perform by running some executables scripts within the `bin/` directory. Some of these QCs come from the deeptools suite of commands, check out the [deepTools manual](https://deeptools.readthedocs.io/en/develop/index.html) for a complete understanding. <br/>
 ### Get peak and read counts
