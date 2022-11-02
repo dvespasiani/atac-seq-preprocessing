@@ -32,6 +32,7 @@ etc....
    * the effective genome size for your species of interest which is based on the length of your sequencing reads. Again, you can find this info either [at this website](https://deeptools.readthedocs.io/en/develop/content/feature/effectiveGenomeSize.html) or, alternatively, by running
     ```
    python ./bin/unique-kmers.py -k <your-read-length> <path/to/genome/fasta/file.fa>
+  
    ``` 
    This script will return you the total estimated number of k-mers found in your species genome assembly. If you need further info on this script look at [MR Crusoe *et al.*, 2015](http://dx.doi.org/10.12688/f1000research.6924.1). <br/>
 
@@ -41,9 +42,11 @@ etc....
 
 ### Running the pipeline
 To test this pipeline on a subset of your fastq files to see if everything runs smoothly and all the desired results are produced, you need to run:
+
 ```
 utils/subsample-files.sh -i <indir> -o <outdir> -n <numbreads>
 ```
+
 This script will extract the first `n = number of reads` from all the files listed in the `i = input dir`. You can then run the entire pipeline interactively on this subset of reads. However, if you do so, remember to correctly specify the location of your subsampled fastq files in the `config/snakemake-config.yaml` file (hint: it's the `fastqdir` directive).
 Next, move the `runInteractively.sh` script outside this project directory and set up your interactive session as:
 
