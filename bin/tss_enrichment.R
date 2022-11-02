@@ -8,7 +8,7 @@ library(GenomicAlignments)
 library(ggthemes)
 library(ggplot2)
 library(ggpubr)
-library(csaw)
+# library(csaw)
 library(TxDb.Mmusculus.UCSC.mm10.knownGene)
 
 setwd('/stornext/General/data/user_managed/grpu_jchoi_0/projects/davide/atac-pipeline')

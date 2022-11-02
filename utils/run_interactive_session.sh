@@ -12,8 +12,6 @@ sinteractive \
  --time=10:00:00 \
  --partition=mig
  
-#  --threads-per-core=16 \
-#  --cpus-per-task=1 \
 # list of modules
 source /usr/local/module/spartan_new.sh
 module load web_proxy
