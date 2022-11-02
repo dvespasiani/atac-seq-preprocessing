@@ -9,44 +9,24 @@ library(ggthemes)
 library(ggplot2)
 library(ggpubr)
 library(csaw)
-library(TxDb.Hsapiens.UCSC.hg38.knownGene)
-library(TxDb.Ptroglodytes.UCSC.panTro5.refGene)
+library(TxDb.Mmusculus.UCSC.mm10.knownGene)
 
-setwd('/data/projects/punim0595/dvespasiani/Human_Chimpanzee_iPSCs_chromatin_accessibility/post_processing_analyses')
-
-scripts_dir <- './scripts/'
-source(paste(scripts_dir,'utils.R',sep=''))
-
-outplot_dir <- create_dir(plot_dir,'atac_seq_qc')
+setwd('/stornext/General/data/user_managed/grpu_jchoi_0/projects/davide/atac-pipeline')
+source('./utils/r-utils.R')
 
 encode_ideal = 7
 encode_acceptable = 5
 
-## list bam
-standard_chr <- paste0("chr", c(1:23,'2A','2B', "X", "Y")) # only use standard chromosomes
-# param <- readParam(pe = "both",restrict=standard_chr,minq=20, dedup=TRUE)
+outplot_dir <- create_dir(path=paste(plots_dir,'atac-seq-qc',sep='')) 
 
+## list bams
 param <- readParam(pe = "both",restrict=standard_chr,max.frag=1000)
 
-get_bamReads = function(organimsDir,pattern){
-    bamReads = list.files(paste0(organimsDir,bamDir), 
-        recursive = T,full.names = T,pattern=pattern)
-    return(bamReads)
-}
+bams <-  list.files(paste0(organimsDir,bamDir), recursive = T,full.names = T,pattern=pattern)
 
-hg38_bams = get_bamReads('../hg38/',"^H.*_tn5_shifted_sorted.bam$")
-pantro5_bams = get_bamReads('../panTro5/',"^C.*_tn5_shifted_sorted.bam$")
+alignment <- lapply(bams, function(x)readGAlignments(x))
 
-# bams <- get_bams(genome)
-
-human_alignment <- lapply(hg38_bams, function(x)readGAlignments(x))
-chimp_alignment <- lapply(pantro5_bams, function(x)readGAlignments(x))
-
-# alignments <- c(chimp_alignment,human_alignment)
-# names(alignments) = samples_names
-
-human_txs <- transcripts(TxDb.Hsapiens.UCSC.hg38.knownGene)
-chimp_txs <- transcripts(TxDb.Ptroglodytes.UCSC.panTro5.refGene)
+txs <- transcripts(TxDb.Hsapiens.UCSC.hg38.knownGene)
 
 get_tsse <- function(alignment,txs){
     tsse <- TSSEscore(alignment, txs)

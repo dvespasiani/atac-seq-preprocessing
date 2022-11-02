@@ -1,24 +1,51 @@
-description: Snakemake configuration file for ATAC-seq preprocessing
+description: Snakemake configuration file for ATAC-seq preprocessing steps
+author: Davide Vespasiani
 
-species: mus musculus
-assembly: mm10
-
+##==================##
+##  I/O directories ##
+##==================##
+## here I am using absolute paths. 
+## You can always change them to relative but make sure to combine them when you set up these config variables in the main snakemake file 
 basedir: /wehisan/general/user_managed/grpu_jchoi_0/
-
 fastqdir: /wehisan/general/user_managed/grpu_jchoi_0/projects/davide/atac-pipeline/data/subsampled-files/
 genome_index: /wehisan/general/user_managed/grpu_jchoi_0/genomes/Mouse/mm10_bowtie_index/mm10
-
 blacklist: /wehisan/general/user_managed/grpu_jchoi_0/genomes/Mouse/mm10/mm10.blacklist.new.bed
+adapters: /wehisan/general/user_managed/grpu_jchoi_0/projects/davide/atac-pipeline/data/adapters/NexteraPE-PE.fa
+tmp_dir: /vast/scratch/users/vespasiani.d/tmp
 
+##==================##
+##  Species info    ##
+##==================##
+species: mus musculus
+assembly: mm10
 genome_size: 2652783500
 read_length: 65
+chrom_sizes: '/wehisan/general/user_managed/grpu_jchoi_0/genomes/Mouse/mm10/mm10.chrom.sizes.txt'
 
-adapters: /wehisan/general/user_managed/grpu_jchoi_0/projects/davide/atac-pipeline/data/adapters/NexteraPE-PE.fa
-
-samples: 
+##==================##
+##     Samples      ##
+##==================##
+## list here all the sample basenames without the read extension 
+samples: &samples
        - Ad2_10_S7_L001
        - Ad2_11_S8_L001
        - Ad2_1_S1_L001
 
+## these lines below will combine all the samples into a single big sample file
+## to make snakemake combining all the aligned and filtered reads into a one big file and call accessible chromatin peaks also on this one
+all_samples: &all_samples 'all_samples'
+combined_sample: 
+       - [*all_samples]
+       - *samples
 
+
+##===================##
+## ENCODE parameters ##
+##===================##
+read_minQ: 30
+## MACS2 peak caller
+npeaks: 300000
+fragment_size: 150
+shift: -75
+pval_thresh: 0.01
 

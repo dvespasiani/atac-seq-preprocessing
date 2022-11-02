@@ -1,29 +1,65 @@
-# Human vs Chimp iPSCs ATAC-seq 
-This repo contains all scripts used to analyse ATAC-seq files from <a href='https://www.biorxiv.org/content/10.1101/466631v1.full.pdf'>Gallego Romero *et al.,* 2018<a>. Files accession number: [GSE122319](https://www.ncbi.nlm.nih.gov/gds/?term=GSE122319[Accession]).
+# Table of Contents
+- [Table of Contents](#table-of-contents)
+  - [Project description](#project-description)
+  - [Project set up](#project-set-up)
+    - [Testing](#testing)
+  - [Pipeline overview](#pipeline-overview)
+    - [FastQC](#fastqc)
+  - [Adaptor trimming](#adaptor-trimming)
+  - [Genome alignment](#genome-alignment)
+  - [Post-alignment QCs <a name="post_align_qc"></a>](#post-alignment-qcs-)
+  - [Strand cross-correlation <a name="encode_cc"></a>](#strand-cross-correlation-)
+  - [DeepTools QCs](#deeptools-qcs)
+    - [BAM Summary and Coverage (FROM HERE IT NEEDS TO BE UPDATED)](#bam-summary-and-coverage-from-here-it-needs-to-be-updated)
+    - [GC bias](#gc-bias)
+    - [Cumulative enrichment (BAM fingerprint)](#cumulative-enrichment-bam-fingerprint)
+  - [Peak call](#peak-call)
+  - [QCs](#qcs)
+    - [Get peak and read counts](#get-peak-and-read-counts)
+    - [Estimate library complexity](#estimate-library-complexity)
+  - [Peak call QCs](#peak-call-qcs)
+    - [Fraction Reads in Peaks (FRiP)](#fraction-reads-in-peaks-frip)
+    - [TSS enrichment](#tss-enrichment)
+  - [Testing for differential accessible (DA) chromatin  (need to re-write this nicely)](#testing-for-differential-accessible-da-chromatin--need-to-re-write-this-nicely)
+    - [Count normalisation](#count-normalisation)
+    - [Retrieving DA regions](#retrieving-da-regions)
 
-## Table of Contents
-1. [Set up environment & download files](#Set-up-environment-&-download-files)
-2. [Snakemake pipeline](#Snakemake-pipeline)
-   - [FastQC](#FastQC)
-   - [Adaptor trimming](#Adaptor-trimming)
-   - [Genome alignment](#Genome-alignment)
-   - [Post-alignment QCs](#post_align_qc)
-   - [Strand cross-correlation](#encode_cc)
-   - [Deeptools QCs](#Deeptools-QCs)
-   - [Peak call](#Peak-call)
-   - [Peak call QCs](#Peak-call-QCs)
-____
-## Set up environment & download files
-To set up the environment and get ready to go look into the `workflow_utils` dir, which contains some useful scripts, including:
-1. `download_files.sh` to download both SRA and ENCODE blacklisted files. The list of SRA files can be found in `data/SRaAccList.txt`. ENCODE blacklisted regions for hg38 are downloaded from [here](http://mitra.stanford.edu/kundaje/akundaje/release/blacklists/hg38-human/hg38.blacklist.bed.gz). Genomic coordinates are then converted from hg38 to panTro5 using liftover 
-2. `create_conda_env.sh` to...create the conda env for running the snakemake pipeline
-3. `subsample_files.sh` to.... subsample the SRA files and creating a new directory where you can test the snakemake pipeline without waiting for ages
-_____
+## Project description
+This repo contains a snakemake pipeline to preprocess fastq files generated from bulk ATAC-seq experiments. Preprocessing steps mainly come from the [ENCODE ATAC-seq processing standards](ATAC-seq Data Standards and Processing Pipeline). For full protocol specifications [check this google doc](https://docs.google.com/document/d/1f0Cm4vRyDQDu0bMehHD7P7KOMxTOP-HiNoIvL1VcBt8/edit). I have noticed they have changed it since last time (mainly polished it), so keep an eye on this. In addition to what reported by the ENCODE, I have also included some extra scripts to perfom and visualise quality control metrics.
+## Project set up
+To set up this pipeline you need to:
+1. Modify the entries in the `config/snakemake-config.yaml` file, such as:
+```
+species: your-species
+genome: your-species-genome
+samples: 
+    - your-sample1
+    - your-sample2
+basedir: your-basedir
+etc....
+```
 
-# Snakemake pipeline
-If not otherwise specified, all these steps below have been taken from the ENCODE ATAC-seq standard processing [pipeline](https://www.encodeproject.org/atac-seq/). For full protocol specifications check [here](https://docs.google.com/document/d/1f0Cm4vRyDQDu0bMehHD7P7KOMxTOP-HiNoIvL1VcBt8/edit).
+**Importantly:** some softwares (e.g., MACS2, deeptools) require you to specify the effective genome size based on your sequencing read length for the species you are working with. You can either find this information [at this website](https://deeptools.readthedocs.io/en/develop/content/feature/effectiveGenomeSize.html) or, alternatively, by running the `./bin/unique-kmers.py` script as:
+```
+python ./bin/unique-kmers.py -k <your-read-length> <path/to/genome/fasta/file.fa>
+```
+This script will return you the total estimated number of k-mers found in your species genome assembly. If you need further info on this script look at [MR Crusoe *et al.*, 2015](http://dx.doi.org/10.12688/f1000research.6924.1).
 
-## FastQC
+Be sure to have `pybedtools` python module installed in your python3. For the moment I have installed it in my own `PYTHONPATH` dir (which is also specified in my `~/.bash_profile`) and I have specified it in the `./bin/calculate-frip.py` script using the sys module in python. **This is not ideal**, but for the moment it works. I need to change it.
+
+### Testing
+If you want to test this pipeline on a subset of your fastq files to see if everything runs smoothly and all the desired results are produced then run `utils/subsample-files.sh -i <indir> -o <outdir> -n <numbreads>`. This script will extract the first `n = number of reads` from all the files listed in the `i = input dir`.
+
+## Pipeline overview
+The pipeline contained in this repo goes through the following steps:
+1. FastQC
+2. Adaptor trimming (Trimmomatic)
+3. Alignment (Bowtie2)
+4. Post-alignment filtering 
+5. Peak-calling (MACS2)
+6. Deeptools suite
+
+### FastQC
 When running FastQC, you can expect 3 modules returning a warining/failure signal:
 1. Per base sequence content because Tn5 has a strong sequence bias at the insertion site. 
 2. Sequence Duplication Levels caused by PCR duplicates
@@ -91,7 +127,7 @@ DeepTools were used for:
 3. Calculate the GC bias
 3. Calculate the cumulative enrichment for each sample (i.e. fingerprint)
 For a complete description of the tools see [deepTools manual](https://deeptools.readthedocs.io/en/develop/index.html). <br/>
-Importantluy, some of the DeepTools command require you to specify the effective the genome size. For hg38 this was easily found [here](https://deeptools.readthedocs.io/en/develop/content/feature/effectiveGenomeSize.html). However for panTro5 I've used `pantro5/scripts/unique-kmers.py` from [MR Crusoe *et al.*, 2015](http://dx.doi.org/10.12688/f1000research.6924.1) as follows:
+Importantly, some of the DeepTools command require you to specify the effective the genome size. For hg38 this was easily found [here](https://deeptools.readthedocs.io/en/develop/content/feature/effectiveGenomeSize.html). However for panTro5 I've used `pantro5/scripts/unique-kmers.py` from [MR Crusoe *et al.*, 2015](http://dx.doi.org/10.12688/f1000research.6924.1) as follows:
 ```
 python unique-kmers.py -k 50 /data/projects/punim0586/shared/genomes/panTro5/panTro5.fa
 ```
@@ -153,6 +189,18 @@ cut -f 1,2 panTro5.fa.fai > chrom.sizes
 ```
 whereas to get chrom.sizes for hg38 chromosomes simply run:
 ` wget http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.chrom.sizes`
+
+
+## QCs
+### Get peak and read counts
+Use `./bin/get-counts.sh -i <input_dir> -o <out_file>`  to obtain number of reads/peaks for each `*.bam$` and `*narrowPeak` file within the respective `out/preprocessing/` directories.
+
+### Estimate library complexity
+To get metrics such as PBC1/PBC2 and NRF (see ) run:
+```
+./bin/estimate-lib-complexity.sh -i <input_dir> -o <out_dir>
+```
+This will create a tab-separated `library-complexity.txt` file in your specified output dir with all those information.
 
 ## Peak call QCs
 ### Fraction Reads in Peaks (FRiP)

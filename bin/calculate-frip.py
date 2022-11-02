@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 ## Author: Laura E Cook, University of Melbourne
 ## Purpose:
 #   1. Intersect aligned reads with called peaks
@@ -8,10 +6,10 @@
 #   4. Calculate fraction of peaks that are in the aligned reads
 #   5. ENCODE guidelines state that FRiP > 0.3 is optimal, FRiP > 0.2 is acceptable
 
-from pybedtools import BedTool
-
 import sys
 import os
+sys.path.append('/home/users/allstaff/vespasiani.d/.local/lib/python3.6/site-packages')
+from pybedtools import BedTool
 
 # bed file (converted from aligned BAM file to bed)
 bed = BedTool(sys.argv[1])

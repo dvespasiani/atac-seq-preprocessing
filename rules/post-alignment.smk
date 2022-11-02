@@ -24,11 +24,11 @@ rule encode_filters:
   group: 
     main
   params:
-    read_minQual = read_minQual
+    read_minQ = read_minQ
   log:
     logs + rule_name + "{sample}-encode-filters.log"
   shell:
-    "samtools view -b -F 1804 -q {params.read_minQual} -f 2 -u {input} | samtools sort -n -o {output}  2> {log}"
+    "samtools view -b -F 1804 -q {params.read_minQ} -f 2 -u {input} | samtools sort -n -o {output}  2> {log}"
 
 rule fixmate:
   input:
@@ -64,7 +64,7 @@ rule markDups:
     rules.rmOrphanread.output 
   output:
     bam = outdir + rule_name  + "{sample}-nochrM-encodefiltered-fixmate-rmorphanread-dupmark.bam",
-    dupQC = outdir + rule_name + "{sample}-dup.qc"
+    dupQC = qcdir + "{sample}-duplicate-rate.qc"
   group: 
     main
   params:
