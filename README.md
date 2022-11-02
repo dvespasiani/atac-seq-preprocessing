@@ -2,6 +2,17 @@
 - [Table of Contents](#table-of-contents)
   - [Project description](#project-description)
   - [Project set up](#project-set-up)
+    - [Running the pipeline](#running-the-pipeline)
+  - [Pipeline overview](#pipeline-overview)
+    - [FastQC](#fastqc)
+    - [Adaptor trimming](#adaptor-trimming)
+    - [Genome alignment](#genome-alignment)
+    - [Peak calling](#peak-calling)
+  - [To call peaks of chromatin accessiblity I am using MACS2 on Tn5-shifted BAM files . MACS2 parameters are defined as per ENCODE.](#to-call-peaks-of-chromatin-accessiblity-i-am-using-macs2-on-tn5-shifted-bam-files--macs2-parameters-are-defined-as-per-encode)
+  - [QCs](#qcs)
+    - [Get peak and read counts](#get-peak-and-read-counts)
+    - [Estimate library complexity](#estimate-library-complexity)
+    - [Fraction Reads in Peaks (FRiP)](#fraction-reads-in-peaks-frip)
     - [TSS enrichment](#tss-enrichment)
     - [BAM Summary and Coverage (FROM HERE IT NEEDS TO BE UPDATED)](#bam-summary-and-coverage-from-here-it-needs-to-be-updated)
     - [GC bias](#gc-bias)
@@ -25,16 +36,16 @@ etc....
 ```
 2. Make sure you have all the information for your species, such as:
    * a chrom.sizes file containing the chromosome sizes. This can be obtained either from UCSC (the link should be something like `http://hgdownload.soe.ucsc.edu/goldenPath/<your-species-assembly>/bigZips/<your-species-assembly>.chrom.sizes`) or, alternatively, by running
-  ```
-   samtools faidx <your-species-assembly>.fa
-   cut -f 1,2 <your-species-assembly>.fa.fai > <your-species-assembly>.chrom.sizes
-   ``` 
+```
+ samtools faidx <your-species-assembly>.fa
+ cut -f 1,2 <your-species-assembly>.fa.fai > <your-species-assembly>.chrom.sizes
+ ``` 
    * the effective genome size for your species of interest which is based on the length of your sequencing reads. Again, you can find this info either [at this website](https://deeptools.readthedocs.io/en/develop/content/feature/effectiveGenomeSize.html) or, alternatively, by running
-    ```
-   python ./bin/unique-kmers.py -k <your-read-length> <path/to/genome/fasta/file.fa>
-  
-   ``` 
-   This script will return you the total estimated number of k-mers found in your species genome assembly. If you need further info on this script look at [MR Crusoe *et al.*, 2015](http://dx.doi.org/10.12688/f1000research.6924.1). <br/>
+```
+ python ./bin/unique-kmers.py -k <your-read-length> <path/to/genome/fasta/file.fa>
+
+ ``` 
+This script will return you the total estimated number of k-mers found in your species genome assembly. If you need further info on this script look at [MR Crusoe *et al.*, 2015](http://dx.doi.org/10.12688/f1000research.6924.1). <br/>
 
 3. Make sure you have all the softwares installed in your R/python envs:
    * The `pybedtools` python module. For the moment I have installed it in my own `PYTHONPATH` dir (which is also specified in my `~/.bash_profile`) and I have specified this path in the `./bin/calculate-frip.py` script using the sys module in python. **However, this is not ideal**, but for the moment it works. I need to change it.
