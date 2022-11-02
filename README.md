@@ -14,10 +14,12 @@
     - [Estimate library complexity](#estimate-library-complexity)
     - [Fraction Reads in Peaks (FRiP)](#fraction-reads-in-peaks-frip)
     - [TSS enrichment](#tss-enrichment)
-    - [BAM Summary and Coverage (FROM HERE IT NEEDS TO BE UPDATED)](#bam-summary-and-coverage-from-here-it-needs-to-be-updated)
+    - [BAM Summary and Coverage](#bam-summary-and-coverage)
     - [GC bias](#gc-bias)
     - [Cumulative enrichment (BAM fingerprint)](#cumulative-enrichment-bam-fingerprint)
  
+
+----
 ## Project description
 This repo contains a snakemake pipeline to preprocess fastq files generated from bulk ATAC-seq experiments. Preprocessing steps mainly come from the [ENCODE ATAC-seq processing standards](https://www.encodeproject.org/atac-seq/). For full protocol specifications [check this google doc](https://docs.google.com/document/d/1f0Cm4vRyDQDu0bMehHD7P7KOMxTOP-HiNoIvL1VcBt8/edit). I have noticed they have changed it since last time (mainly polished it), so keep an eye on this. In addition to what reported by the ENCODE, I have also included some extra scripts to perfom and visualise quality control metrics.
 ## Project set up
@@ -43,7 +45,6 @@ etc....
    * the effective genome size for your species of interest which is based on the length of your sequencing reads. Again, you can find this info either [at this website](https://deeptools.readthedocs.io/en/develop/content/feature/effectiveGenomeSize.html) or, alternatively, by running
 ```
  python ./bin/unique-kmers.py -k <your-read-length> <path/to/genome/fasta/file.fa>
-
  ``` 
 This script will return you the total estimated number of k-mers found in your species genome assembly. If you need further info on this script look at [MR Crusoe *et al.*, 2015](http://dx.doi.org/10.12688/f1000research.6924.1). <br/>
 
@@ -71,6 +72,8 @@ Then simply run:
 snakemake --cores 8 -s snakefile-preprocess.smk
 ```
 and you should get your results. <br/>
+
+----
 ## Pipeline overview
 The pipeline contained in this repo goes through the following steps:
 1. FastQC
@@ -79,8 +82,6 @@ The pipeline contained in this repo goes through the following steps:
 4. Post-alignment filtering 
 5. Peak-calling (MACS2)
 7. QCs generation, e.g. using deepTools and other metrics
-
-----
 ### FastQC
 For ATAC-seq experiments, when running FastQC you can expect 3 modules returning a warining/failure signal:
 1. Per base sequence content because Tn5 has a strong sequence bias at the insertion site. 
@@ -115,7 +116,7 @@ bin/plot-frip-summary.R -i input/dir/containing/frip/result/txt/files
 ### TSS enrichment
 This metric is used as another signal to noise indication. Reads around a reference set of TSSs are collected to form an aggregate distribution of reads centered on the TSSs and extending to 1000 bp in either direction (for a total of 2000bp). This distribution is then normalized by taking the average read depth in the 100 bps at each of the end flanks of the distribution (for a total of 200bp of averaged data) and calculating a fold change at each position over that average read depth. This means that the flanks should start at 1, and if there is high read signal at transcription start sites (highly open regions of the genome)there should be an increase in signal up to a peak in the middle. We take the signal value at the center of the distribution after this normalization as our TSS enrichment metric.
 
-### BAM Summary and Coverage (FROM HERE IT NEEDS TO BE UPDATED)
+### BAM Summary and Coverage
 Following BAM filtering I removed reads overlapping ENCODE blacklisted regions and then calculated the bam coverage with `bamCoverage` for all samples. Coverage is calculated as the number of reads per bin (i.e. short consecutive counting windows of defined size) and it can be scaled in RPKM,CPM. <br/>
 Resulting summary was plotted using `plotCoverage` to visually assess the sequencing depth of each sample after sampling 25*10^6 reads. This command counts the number of overlapping reads and returns 2 plots indicating:
 1. The frequencies of the observed read coverages per sample
