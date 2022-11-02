@@ -2,16 +2,6 @@
 - [Table of Contents](#table-of-contents)
   - [Project description](#project-description)
   - [Project set up](#project-set-up)
-    - [Testing](#testing)
-  - [Pipeline overview](#pipeline-overview)
-    - [FastQC](#fastqc)
-  - [Adaptor trimming](#adaptor-trimming)
-  - [Genome alignment](#genome-alignment)
-  - [Peak call](#peak-call)
-  - [QCs](#qcs)
-    - [Get peak and read counts](#get-peak-and-read-counts)
-    - [Estimate library complexity](#estimate-library-complexity)
-    - [Fraction Reads in Peaks (FRiP)](#fraction-reads-in-peaks-frip)
     - [TSS enrichment](#tss-enrichment)
     - [BAM Summary and Coverage (FROM HERE IT NEEDS TO BE UPDATED)](#bam-summary-and-coverage-from-here-it-needs-to-be-updated)
     - [GC bias](#gc-bias)
@@ -21,7 +11,7 @@
 This repo contains a snakemake pipeline to preprocess fastq files generated from bulk ATAC-seq experiments. Preprocessing steps mainly come from the [ENCODE ATAC-seq processing standards](https://www.encodeproject.org/atac-seq/). For full protocol specifications [check this google doc](https://docs.google.com/document/d/1f0Cm4vRyDQDu0bMehHD7P7KOMxTOP-HiNoIvL1VcBt8/edit). I have noticed they have changed it since last time (mainly polished it), so keep an eye on this. In addition to what reported by the ENCODE, I have also included some extra scripts to perfom and visualise quality control metrics.
 ## Project set up
 To set up this pipeline you need to:
-1. Modify the entries in the `config/snakemake-config.yaml` file, such as:
+1. Modify the entries in the `config/snakemake-config.yaml` file to your needs, such as:
 ```
 species: your-species
 genome: your-species-genome
@@ -29,20 +19,44 @@ samples:
     - your-sample1
     - your-sample2
 basedir: your-basedir
+fastqdir: your-fastqdir-containing-fastq-files
 etc....
+
 ```
+2. Make sure you have all the information for your species, such as:
+   * a chrom.sizes file containing the chromosome sizes. This can be obtained either from UCSC (the link should be something like `http://hgdownload.soe.ucsc.edu/goldenPath/<your-species-assembly>/bigZips/<your-species-assembly>.chrom.sizes`) or, alternatively, by running
+  ```
+   samtools faidx <your-species-assembly>.fa
+   cut -f 1,2 <your-species-assembly>.fa.fai > <your-species-assembly>.chrom.sizes
+   ``` 
+   * the effective genome size for your species of interest which is based on the length of your sequencing reads. Again, you can find this info either [at this website](https://deeptools.readthedocs.io/en/develop/content/feature/effectiveGenomeSize.html) or, alternatively, by running
+    ```
+   python ./bin/unique-kmers.py -k <your-read-length> <path/to/genome/fasta/file.fa>
+   ``` 
+   This script will return you the total estimated number of k-mers found in your species genome assembly. If you need further info on this script look at [MR Crusoe *et al.*, 2015](http://dx.doi.org/10.12688/f1000research.6924.1). <br/>
 
-**Importantly:** some softwares (e.g., MACS2, deeptools) require you to specify the effective genome size based on your sequencing read length for the species you are working with. You can either find this information [at this website](https://deeptools.readthedocs.io/en/develop/content/feature/effectiveGenomeSize.html) or, alternatively, by running the `./bin/unique-kmers.py` script as:
+3. Make sure you have all the softwares installed in your R/python envs:
+   * The `pybedtools` python module. For the moment I have installed it in my own `PYTHONPATH` dir (which is also specified in my `~/.bash_profile`) and I have specified this path in the `./bin/calculate-frip.py` script using the sys module in python. **However, this is not ideal**, but for the moment it works. I need to change it.
+   * R libraries such as `data.table`, `argparse`, `GenomicAlignments`, `ATACseqQC`, `TxDb.<your-species>.UCSC.<your-species-assembly>.knownGene`. All the other libraries should be pretty standards
+
+### Running the pipeline
+To test this pipeline on a subset of your fastq files to see if everything runs smoothly and all the desired results are produced, you need to run:
 ```
-python ./bin/unique-kmers.py -k <your-read-length> <path/to/genome/fasta/file.fa>
+utils/subsample-files.sh -i <indir> -o <outdir> -n <numbreads>
 ```
-This script will return you the total estimated number of k-mers found in your species genome assembly. If you need further info on this script look at [MR Crusoe *et al.*, 2015](http://dx.doi.org/10.12688/f1000research.6924.1).
+This script will extract the first `n = number of reads` from all the files listed in the `i = input dir`. You can then run the entire pipeline interactively on this subset of reads. However, if you do so, remember to correctly specify the location of your subsampled fastq files in the `config/snakemake-config.yaml` file (hint: it's the `fastqdir` directive).
+Next, move the `runInteractively.sh` script outside this project directory and set up your interactive session as:
 
-Be sure to have `pybedtools` python module installed in your python3. For the moment I have installed it in my own `PYTHONPATH` dir (which is also specified in my `~/.bash_profile`) and I have specified it in the `./bin/calculate-frip.py` script using the sys module in python. **This is not ideal**, but for the moment it works. I need to change it.
-
-### Testing
-If you want to test this pipeline on a subset of your fastq files to see if everything runs smoothly and all the desired results are produced then run `utils/subsample-files.sh -i <indir> -o <outdir> -n <numbreads>`. This script will extract the first `n = number of reads` from all the files listed in the `i = input dir`.
-
+```
+chmod +x runInteractively.sh
+./runInteractively.sh -p <your-project-name> # to change slurm salloc arguments (e.g., mem/time etc..) go to config/cluster_config.yaml
+eval "$(cat "$modules")"  # this loads all the modules listed in the config/modules.txt file
+```
+Then simply run:
+```
+snakemake --cores 8 -s snakefile-preprocess.smk
+```
+and you should get your results. <br/>
 ## Pipeline overview
 The pipeline contained in this repo goes through the following steps:
 1. FastQC
@@ -52,61 +66,22 @@ The pipeline contained in this repo goes through the following steps:
 5. Peak-calling (MACS2)
 7. QCs generation, e.g. using deepTools and other metrics
 
+----
 ### FastQC
-When running FastQC, you can expect 3 modules returning a warining/failure signal:
+For ATAC-seq experiments, when running FastQC you can expect 3 modules returning a warining/failure signal:
 1. Per base sequence content because Tn5 has a strong sequence bias at the insertion site. 
 2. Sequence Duplication Levels caused by PCR duplicates
 3. Overrepresented sequences
+Check them anyhow in case there is something extremely weird in your dataset.
+### Adaptor trimming
+I am using Trimmomatic to remove Illumina Nextera adapter sequeces which I have obtained [here](https://github.com/timflutre/trimmomatic/blob/master/adapters/NexteraPE-PE.fa). If you have other adapter sequences then simply make a fasta file with those sequences and change the `adapters:` directive in the `config/snakemake-config.yaml` file. To identify and then remove adapters, I am allowing for 2 max mismatches, a threshold of Q = 30 for PE palindrome read alignment (this can control for short adapter retentions at the 3' end of each read) and a threshold of Q = 10 for a simple alignment match between adapters and read. Finally, I am removing all initial/terminal sequences having a phred score <20 and all reads that, after these quality steps are < 20 bp long. <br/>
+**PS:** from the trimmomatic manual, each match increases the Q score by 0.6 whereas mismatches reduces it by Q/10. Thus when Q = 30, there should be around 50 matches between your sequence and the adapters, whereas Q = 10, there should be around 16 matches. 
 
-## Adaptor trimming
-Contrarily to what ENCODE did, for this step I used Trimmomatic to remove Illumina Nextera adapter sequeces. Fasta files containing the actual adapter sequences were obtained from  [here](https://github.com/timflutre/trimmomatic/blob/master/adapters/NexteraPE-PE.fa).<br/>
-To identify adapters I've allowed for 2 max mismatches, a threshold of Q = 30 for PE palindrome read alignment (this can control for short adapter retentions at the 3' end of each read) and a threshold of Q = 10 for a simple alignment match between adapters and read. <br />
-PS: In trimmomatic each match increase Q score by 0.6 whereas mismatches reduce Q by Q/10. Thus for a Q of 30 there must be around 50 matches and for a Q of 10 there are around 16 matches. <br />
-Finally, I've removed all initial/terminal sequences having a phred score <20 and all reads that, after these quality steps were <20bp long. <br/>
-Trimmomatic then splits fastq files in `*.paired.fastq` and `*.unpaired.fastq`. All downstream analyses are carried out only on paired trimmed reads.
-
-## Genome alignment 
-I used Bowtie2 to align reads to hg38 and panTro5 genomes. Differences with ENCODE alignment:
-* I have specified a max fragment length of 5kb (encode sets it to 2kb)
-* I have allowed dovetail (i.e. mates extending past each other)
-* The maximum number of distinct, valid alignments was set to 1, so no multimapping was allowed (encode offers both solutions). Anyhow, Bowtie2 by default reports the best alignment, and in case of multimapping with same score a random selection is performed.
-* I have ran Bowtie2 on a very sensitive mode (i.e., `--very-sensitive`) which by default means:
-      * No mismatches are allowed 
-      * The length of the seed substrings to align during multiseed alignment is 20 (ps: smaller values make alignment more sensitive)
-      * Up to 20 consecutive seed extension attempts that can fail before Bowtie2 moves on, using the best alignment found (nb: a seed extension fails if it does not yield a new best or a new second-best alignment)
-      * A maximum of 3 re-seeds of reads with repetitive seeds is allowed (i.e. Bowtie2 chooses a new set of reads with same length and same number of mismatches at different offsets and searches for more alignments).
-See [Bowtie2 manual](http://bowtie-bio.sourceforge.net/bowtie2/manual.shtml#bowtie2-options-i) for a more detailed description. <br/>
-**NB**: Concordant alignment occurs when reads aligned with their expected mate orientation and with the expected range of distance between mates. Discordant alignment instead occurs when both mates have unique alignments, but the mates aren't in their expected relative orientations or aren't within their expected range ditance (or both).
-## Peak call
-Peak calling was performed using MACS2 on Tn5-shifted BAM files (from `ATACseqQC.R` script). Because coverage is very low for each sample I first merged all the technical replicates and then called the peaks on each sample (i.e. biological replicate).  <br/>
-MACS2 flags set according to ENCODE guidelines.
-Output files:
-* $_default_peaks.narrowPeaks
-BED6+4 file format. 
-   * 5th column (i.e. score) is calculated as `int(-10*log10pvalue)`<br/>
-   * 7th colum reports fold-change at peak summit <br/>
-   * 8th and 9th colums report -log10pvalue and -log10qvalue respectively at peak summit <br/>
-   * 10th column represents the relative summit position to peak start <br/>
-* $_default_peaks.xlsx
-Spreadsheet containing info about called peaks (i.e. chr; start; end; peak summit position; p/q-vals etc...)
-* $_default_summits.bed
-BED file containing the peak summits locations for every peak
-* $_default_treat_pileup.bdg
-bedGraph file containing the pileup signals of the treatment sample
-* $_control_lambda.bdg
-bedGraph file containing the local biases estimated for each genomic location from the control sample, or from treatment sample when the control sample is absent
-<p>
-These latter 2 files are then compared using `bdgcmp` subcommand to generate a signal track bedGraph file containing scores: p-value, q-value, log-likelihood, and log fold changes for each peak.
-
-Chimp `chrom.sizes` file for bedtools was generated using:
-```
-samtools faidx panTro5.fa
-cut -f 1,2 panTro5.fa.fai > chrom.sizes
-```
-whereas to get chrom.sizes for hg38 chromosomes simply run:
-` wget http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.chrom.sizes`
-
-
+### Genome alignment 
+I am using Bowtie2 to align reads to the genome assembly of the species of interest. Bowtie2 alignment parameters are defined as per ENCODE.
+### Peak calling
+To call peaks of chromatin accessiblity I am using MACS2 on Tn5-shifted BAM files . MACS2 parameters are defined as per ENCODE.
+-----
 ## QCs
 Here I am listing a series of QCs the snakemake pipeline will automatically run for you plus some others you can perform by running some executables scripts within the `bin/` directory. Some of these QCs come from the deeptools suite of commands, check out the [deepTools manual](https://deeptools.readthedocs.io/en/develop/index.html) for a complete understanding. <br/>
 ### Get peak and read counts
