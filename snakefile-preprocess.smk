@@ -22,7 +22,6 @@ chrom_sizes = config['chrom_sizes']
 
 sample = config['samples']
 
-
 # genome2bit_index = config['genome2bit_index']
 # merged_sample = config['merged_sample']
 
@@ -59,8 +58,7 @@ include: "rules/trim-adapter.smk"
 include: "rules/alignment.smk"
 include: "rules/post-alignment.smk"
 include: "rules/peak-calling.smk"
-# include: "rules/cross_corr.smk"
-# include: "rules/deeptools.smk"
+include: "rules/deeptools.smk"
 
 
 rule all:
@@ -113,26 +111,17 @@ rule all:
             expand(qcdir + "{sample}-frip.txt",sample=sample),
 
             
-            ## deeptools QCs
-            # expand(deeptools_outdir + "{sample}.SeqDepthNorm.bw",sample=sample),
-            # deeptools_outdir + "Samples_plotCoverage.png",
-            # deeptools_outdir + "Samples_plotfingerprint.png",
-            # deeptools_outdir + "multiBAM_fingerprint_metrics.txt",
-            # deeptools_outdir + "multiBAM_fingerprint_rawcounts.txt",
-            # expand(deeptools_outdir + "{sample}-GC_content.txt",sample=sample),
-            # expand(deeptools_outdir + "{sample}-plot_GC_content.png",sample=sample),
-            # deeptools_outdir + "Summary.npz",
-            # deeptools_outdir + "Readcounts.txt",
-            # deeptools_outdir + "PearsonCor_multibamsum.png",
-            # deeptools_outdir + "PearsonCor_multibamsum_matrix.txt"
-
-
-## Cross correlation
-      # expand("output/ENCODE_CC/Files/{sample}-1_trimmed.fastq.gz",sample=sample),
-      # expand("output/ENCODE_CC/Files/{sample}-1_trimmed.bam",sample=sample),
-      # expand("output/ENCODE_CC/Files/{sample}-1_trimmed_q30.bam",sample=sample),
-      # expand("output/ENCODE_CC/Files/{sample}-R1_trimmed_q30_SE.tagAlign.gz",sample=sample),
-      # expand("output/ENCODE_CC/Files/{sample}.filt.sample.25Mreads.SE.tagAlign.gz",sample=sample),
-      # expand("output/ENCODE_CC/QCs/{sample}-filt_25Mreads.SE.cc.qc",sample=sample),
-      # expand("output/ENCODE_CC/QCs/{sample}-filt_25Mreads.SE.cc.plot.pdf",sample=sample),
-
+            ## deeptools
+            expand(outdir + "deeptools/{sample}-noblacklist.bam",sample=sample),
+            expand(outdir + "deeptools/{sample}-noblacklist.bai",sample=sample),
+            expand(outdir + "deeptools/{sample}-SeqDepthNorm.bw",sample=sample),
+            outdir  + "deeptools/samples-bam-coverage.png",
+            outdir + "deeptools/samples-plot-fingerprint.png",
+            outdir + "deeptools/multiBAM-fingerprint-metrics.txt",
+            outdir + "deeptools/multiBAM-fingerprint-rawcounts.txt",
+            expand(outdir + "deeptools/{sample}-GC-content.txt",sample=sample),
+            expand(outdir + "deeptools/{sample}-plot-GC-content.png",sample=sample),
+            outdir + "deeptools/multibam-summary.npz",
+            outdir + "deeptools/multibam-readcounts.txt",
+            outdir + "deeptools/pearson-corr-multibam.png",
+            outdir + "deeptools/pearson-corr-multibamsum-matrix.txt"
