@@ -2,15 +2,19 @@
 - [Table of Contents](#table-of-contents)
   - [Project description](#project-description)
   - [Project set up](#project-set-up)
-    - [Running the pipeline](#running-the-pipeline)
+  - [Running the pipeline](#running-the-pipeline)
+    - [Interactively](#interactively)
+    - [In the background](#in-the-background)
   - [Pipeline overview](#pipeline-overview)
     - [FastQC](#fastqc)
     - [Adaptor trimming](#adaptor-trimming)
     - [Genome alignment](#genome-alignment)
     - [Peak calling](#peak-calling)
-  - [QCs](#qcs)
+  - [Quality controls](#quality-controls)
     - [Get peak and read counts](#get-peak-and-read-counts)
     - [Estimate library complexity](#estimate-library-complexity)
+    - [Get summary alignment results](#get-summary-alignment-results)
+    - [Peak general QCs](#peak-general-qcs)
     - [Fraction Reads in Peaks (FRiP)](#fraction-reads-in-peaks-frip)
     - [TSS enrichment](#tss-enrichment)
     - [BAM Summary and Coverage](#bam-summary-and-coverage)
@@ -49,9 +53,22 @@ This script will return you the total estimated number of k-mers found in your s
 
 3. Make sure you have all the softwares installed in your R/python envs:
    * The `pybedtools` python module. For the moment I have installed it in my own `PYTHONPATH` dir (which is also specified in my `~/.bash_profile`) and I have specified this path in the `./bin/calculate-frip.py` script using the sys module in python. **However, this is not ideal**, but for the moment it works. I need to change it.
-   * R libraries such as `data.table`, `argparse`, `GenomicAlignments`, `ATACseqQC`, `TxDb.<your-species>.UCSC.<your-species-assembly>.knownGene`. All the other libraries should be pretty standards
+   * R libraries such as `yaml`, `data.table`, `argparse`, `GenomicAlignments`, `ATACseqQC`, `csaw`, `GenomicFeatures`, `TxDb.<your-species>.UCSC.<your-species-assembly>.knownGene`. All the other libraries should be pretty standards
 
-### Running the pipeline
+4. Once you know how many samples you are preprocessing, replace the following lines within the `utils/r-utils.R`:
+```
+qualitative_palette = brewer.pal.info[brewer.pal.info$category == 'qual',]
+sample_palette = sample(unlist(mapply(brewer.pal, qualitative_palette$maxcolors, rownames(qualitative_palette))),length(samples))
+names(sample_palette) = samples
+```
+with something like:
+```
+sample_palette =  c('your','palette')
+```
+
+## Running the pipeline
+
+### Interactively
 To test this pipeline on a subset of your fastq files to see if everything runs smoothly and all the desired results are produced, you need to run:
 
 ```
@@ -72,6 +89,8 @@ snakemake --cores 8 -s snakefile-preprocess.smk
 ```
 and you should get your results. <br/>
 
+### In the background
+
 ----
 ## Pipeline overview
 The pipeline contained in this repo goes through the following steps:
@@ -90,32 +109,46 @@ Check them anyhow in case there is something extremely weird in your dataset.
 ### Adaptor trimming
 I am using Trimmomatic to remove Illumina Nextera adapter sequeces which I have obtained [here](https://github.com/timflutre/trimmomatic/blob/master/adapters/NexteraPE-PE.fa). If you have other adapter sequences then simply make a fasta file with those sequences and change the `adapters:` directive in the `config/snakemake-config.yaml` file. To identify and then remove adapters, I am allowing for 2 max mismatches, a threshold of Q = 30 for PE palindrome read alignment (this can control for short adapter retentions at the 3' end of each read) and a threshold of Q = 10 for a simple alignment match between adapters and read. Finally, I am removing all initial/terminal sequences having a phred score <20 and all reads that, after these quality steps are < 20 bp long. <br/>
 **PS:** from the trimmomatic manual, each match increases the Q score by 0.6 whereas mismatches reduces it by Q/10. Thus when Q = 30, there should be around 50 matches between your sequence and the adapters, whereas Q = 10, there should be around 16 matches. 
-
 ### Genome alignment 
 I am using Bowtie2 to align reads to the genome assembly of the species of interest. Bowtie2 alignment parameters are defined as per ENCODE.
-
 ### Peak calling
 To call peaks of chromatin accessiblity I am using MACS2 on Tn5-shifted BAM files. MACS2 parameters are defined as per ENCODE.
-
-## QCs
+## Quality controls
 Here I am listing a series of QCs the snakemake pipeline will automatically run for you plus some others you can perform by running some executables scripts within the `bin/` directory. Some of these QCs come from the deeptools suite of commands, check out the [deepTools manual](https://deeptools.readthedocs.io/en/develop/index.html) for a complete understanding. <br/>
+All the QCs I am generating extra are by default located in the `out/preprocessing/plot/atac-seq-qc` directory. You can change this if you want to.
 ### Get peak and read counts
 Use `./bin/get-counts.sh -i <input_dir> -o <out_file>`  to obtain number of reads/peaks for each `*.bam$` and `*narrowPeak` file within the respective `out/preprocessing/` directories.
 ### Estimate library complexity
-To get metrics such as PBC1/PBC2 and NRF (see ) run:
+To get metrics such as PBC1/PBC2 and NRF ([see here](https://www.encodeproject.org/data-standards/terms/#library)) run:
 ```
 ./bin/estimate-lib-complexity.sh -i <input_dir> -o <out_dir>
 ```
 This will create a tab-separated `library-complexity.txt` file in your specified output dir with all those information.
+### Get summary alignment results
+To plot the Bowtie2 alignment results (i.e., the % of reads aligned) for each sample, run:
+```
+Rscript ./bin/plot-alignment-summary.R -i path/to/logs/alignment/dir/
+```
+**NB:** The files you should access to, by default, are located in the `logs/alignment` directory as per snakemake.
+
+### Peak general QCs
+To plot some other general QCs for your set of peaks run:
+```
+Rscript ./bin/plot-peak-qcs.R 
+```
+At the moment this script will only return you a plot with the distribution of peak sizes for your set of peaks. If I will think/come across with other QCs I will incorporate them in here
 ### Fraction Reads in Peaks (FRiP)
 It represents the proportion of all mapped reads that fall into the called peak regions. FRiP scores positively correlates with the number of regions. According to ENCODE: "*FRiP should be >0.3, though values greater than 0.2 are acceptable*". <br/>
 FRiP calculation is already included in the snakemake pipeline, see `rule_frip` in `rules/peak-calling.smk`. However, to generate a barchart with the FRiP scores for each of your samples run:
+
 ```
-bin/plot-frip-summary.R -i input/dir/containing/frip/result/txt/files
+Rscript ./bin/plot-frip-summary.R -i path/to/input/dir/with/frip/result/
 ```
 ### TSS enrichment
-This metric is used as another signal to noise indication. Reads around a reference set of TSSs are collected to form an aggregate distribution of reads centered on the TSSs and extending to 1000 bp in either direction (for a total of 2000bp). This distribution is then normalized by taking the average read depth in the 100 bps at each of the end flanks of the distribution (for a total of 200bp of averaged data) and calculating a fold change at each position over that average read depth. This means that the flanks should start at 1, and if there is high read signal at transcription start sites (highly open regions of the genome)there should be an increase in signal up to a peak in the middle. We take the signal value at the center of the distribution after this normalization as our TSS enrichment metric.
-
+To calculate and plot the TSS enrichment run:
+```
+Rscript ./bin/plot-tss-enrich.R
+```
 ### BAM Summary and Coverage
 Following BAM filtering I removed reads overlapping ENCODE blacklisted regions and then calculated the bam coverage with `bamCoverage` for all samples. Coverage is calculated as the number of reads per bin (i.e. short consecutive counting windows of defined size) and it can be scaled in RPKM,CPM. <br/>
 Resulting summary was plotted using `plotCoverage` to visually assess the sequencing depth of each sample after sampling 25*10^6 reads. This command counts the number of overlapping reads and returns 2 plots indicating:
