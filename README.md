@@ -136,11 +136,10 @@ To plot some other general QCs for your set of peaks run:
 ```
 Rscript ./bin/plot-peak-qcs.R 
 ```
-At the moment this script will only return you a plot with the distribution of peak sizes for your set of peaks. If I will think/come across with other QCs I will incorporate them in here
+At the moment this script will only return you a plot with the distribution of peak sizes for your set of peaks. If I will think/come across with other QCs I will incorporate them in here.
 ### Fraction Reads in Peaks (FRiP)
 It represents the proportion of all mapped reads that fall into the called peak regions. FRiP scores positively correlates with the number of regions. According to ENCODE: "*FRiP should be >0.3, though values greater than 0.2 are acceptable*". <br/>
 FRiP calculation is already included in the snakemake pipeline, see `rule_frip` in `rules/peak-calling.smk`. However, to generate a barchart with the FRiP scores for each of your samples run:
-
 ```
 Rscript ./bin/plot-frip-summary.R -i path/to/input/dir/with/frip/result/
 ```
@@ -150,25 +149,14 @@ To calculate and plot the TSS enrichment run:
 Rscript ./bin/plot-tss-enrich.R
 ```
 ### BAM Summary and Coverage
-Following BAM filtering I removed reads overlapping ENCODE blacklisted regions and then calculated the bam coverage with `bamCoverage` for all samples. Coverage is calculated as the number of reads per bin (i.e. short consecutive counting windows of defined size) and it can be scaled in RPKM,CPM. <br/>
-Resulting summary was plotted using `plotCoverage` to visually assess the sequencing depth of each sample after sampling 25*10^6 reads. This command counts the number of overlapping reads and returns 2 plots indicating:
+Both of these QCs are obtained by running deepTools programs. Bam coverage is calculated as the number of reads over short consecutive counting windows of defined size. The snakemake pipeline will run deepTools `bamCoverage` and `plotCoverage` programs to respectively calculate and plot the coverage for each sample. The plotting command will return 2 plots indicating:
 1. The frequencies of the observed read coverages per sample
 2. The fraction of the genome covered by >= a given number of reads 
-
-To investigate the correlation between the samples read coverages I've used `multiBamSummary`, which computes the read coverages over the entire genome and/or specific genomic regions for >=2 BAM files. Resulting pairwise Pearson correlation values are plotted into a heatmap  with `plotCorrelation`. 
-
+To calculate and plot the correlation between read coverages across samples I am using `multiBamSummary` and `plotCorrelation`, respectively. The first program computes the read coverages over the entire genome and/or specific genomic regions for >=2 BAM files, whereas the second one plots a heatmap with the resulting Peason correlation values.
 ### GC bias
-This QC step tests the assumption of an expected uniform distribution of sequenced reads across the genome, regardless of their base-pair composition. However, PCR steps performed during library preparation can enrich for GC-rich fragments and this will influence the sequencing results.<br/>
-The deepTools command `computeGCbias` first calculates the expected GC profile from the given genome by calculating the GC % for DNA fragments of a fixed size. It then compares the expectations with the observed GC content within the sequenced reads. <br/> 
-The resulting plots report the number of reads overlapping genomic regions of increasing GC content and the log2(observed/expected) ratio of reads per GC content region. If there is no GC bias then the observed and expected GC profiles will be similar, i.e. ratio of observed/expected GC content per fragment length would = 1. <br/>
-In this experiment there is a linear increase in the exp/obs read coverage across all samples. Possible solutions:
-1. Run a simple, non-conservative peak calling on the uncorrected BAM file first to obtain a BED file of peak regions that are then supplied to `computeGCbias` to limit the calculation
-2. Run the `correctGCbias` deepTool, which removes reads from regions of too high-coverage and add reads to regions of low-coverage
-2. Leave it as it is since the bias is consistent across all samples and it might be a biological effect 
+This QC step is performed to test the assumption of an expected uniform distribution of sequenced reads across the genome, regardless of their base-pair composition. This assumption can fail during library prep, when PCR enriches for GC-rich fragments. Here I am using the deepTools command `computeGCbias` to first calculate the expected GC profile for the genome of the species of interest, as the distribution of GC-content for DNA fragments of a given size. The program will compare the expectations with the observations, returning a plot for each sample showing the number of reads overlapping genomic regions of increasing GC content and the log2(observed/expected) ratio of reads per GC content region. If there is no GC-bias in your samples then the observed and expected GC profiles would be similar, i.e. ratio of observed/expected GC content per fragment length = 1. If you spot a GC-bias, you could run the `correctGCbias` program, which removes reads from regions of too high-coverage and add reads to regions of low-coverage.
 
 ### Cumulative enrichment (BAM fingerprint)
-<p> The deepTools `plotFingerprint` samples indexed BAM files and calculates the samples cumulative enrichment by counting all reads overlapping a window (bin) of a given length. The resulting plot is useful to assess how well the signal of the sequenced reads can be differentiated from the background distribution of reads in the control input sample. <br/>
+For this QC, I am using the deepTools `plotFingerprint` program. It samples the indexed BAM files and calculates the samples cumulative enrichment by counting all reads overlapping a window (bin) of a given length. The resulting plot is useful to assess how well the signal of the sequenced reads can be differentiated from the background distribution of reads in the control input sample. An ideal input with perfect uniform distribution of reads along the genome (i.e. without enrichments in specific open chromatin regions) and infinite sequencing coverage would generate a straight diagonal line. On the other hand, a strong enrichment in very specific (i.e. fragment size) chromatin regions will result in a prominent and steep rise of the cumulative sum towards the highest rank. This means that a big chunk of reads from the test (ChIP/ATAC) sample is located in few bins which corresponds to high, narrow enrichments typically seen for transcription factors. <br/>
 
-An ideal input with perfect uniform distribution of reads along the genome (i.e. without enrichments in specific open chromatin regions) and infinite sequencing coverage would generate a straight diagonal line. On the other hand, a strong enrichment in very specific (i.e. fragment size) chromatin regions will result in a prominent and steep rise of the cumulative sum towards the highest rank. This means that a big chunk of reads from the test (ChIP/ATAC) sample is located in few bins which corresponds to high, narrow enrichments typically seen for transcription factors. <br/>
-
-**PS**: check where cumulative curve starts on the plots as this will give you an indication of the percentage of the genome that was not sequenced at all (i.e. bins containing 0 reads). However, such percentage can be quite high, especially for extremely high enrichment which will result in the vast majority of reads occurring within few peaks, [see examples](https://deeptools.readthedocs.io/en/develop/content/tools/plotFingerprint.html).  </p>
+**PS**: check where cumulative curve starts on the plots as this will give you an indication of the percentage of the genome that was not sequenced at all (i.e. bins containing 0 reads). However, such percentage can be quite high, especially for extremely high enrichment which would result in the vast majority of reads occurring within few peaks, [see these examples](https://deeptools.readthedocs.io/en/develop/content/tools/plotFingerprint.html).
