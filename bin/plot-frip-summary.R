@@ -5,8 +5,6 @@ library(ggplot2)
 library(ggpubr)
 library(argparse)
 
-setwd('/stornext/General/data/user_managed/grpu_jchoi_0/projects/davide/atac-pipeline')
-
 source('./utils/r-utils.R')
 
 encode_acceptable = 0.8
@@ -41,7 +39,7 @@ geom_hline(yintercept=encode_acceptable)+
 geom_text(aes(1.5,encode_acceptable,label = 'acceptable', vjust = -1))+
 geom_hline(yintercept=encode_ideal,linetype="dashed")+
 geom_text(aes(1.5,encode_ideal,label = 'ideal', vjust = -1))+
-# scale_fill_manual(values=samples_palette)+
+scale_fill_manual(values=sample_palette)+
 theme_classic()+
 theme(
     legend.position='none',

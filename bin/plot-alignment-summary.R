@@ -6,8 +6,6 @@ library(ggplot2)
 library(ggpubr)
 library(argparse)
 
-setwd('/stornext/General/data/user_managed/grpu_jchoi_0/projects/davide/atac-pipeline')
-
 source('./utils/r-utils.R')
 
 encode_acceptable = 0.2
@@ -51,7 +49,7 @@ pdf(paste(outplot_dir,'bowtie2-alignment-qc.pdf',sep=''),width=7,height=7)
 ggplot(alignment_rate,aes(x=sample,y=fraction_reads,fill=sample))+ 
 geom_bar(stat="identity")+xlab('')+ylab('Bowtie2 Alignment rate')+
 geom_hline(yintercept=encode_acceptable)+
-# scale_fill_manual(values=samples_palette)+
+scale_fill_manual(values=sample_palette)+
 geom_text(aes(1.5,encode_acceptable,label = 'acceptable', vjust = -1))+
 geom_text(aes(1.5,encode_ideal,label = 'ideal', vjust = -1))+
 geom_hline(yintercept=encode_ideal,linetype="dashed")+

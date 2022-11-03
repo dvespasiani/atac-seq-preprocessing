@@ -11,17 +11,17 @@ fastqdir: /wehisan/general/user_managed/grpu_jchoi_0/projects/davide/atac-pipeli
 genome_index: /wehisan/general/user_managed/grpu_jchoi_0/genomes/Mouse/mm10_bowtie_index/mm10
 blacklist: /wehisan/general/user_managed/grpu_jchoi_0/genomes/Mouse/mm10/mm10.blacklist.new.bed
 adapters: /wehisan/general/user_managed/grpu_jchoi_0/projects/davide/atac-pipeline/data/adapters/NexteraPE-PE.fa
-tmp_dir: /vast/scratch/users/vespasiani.d/tmp
 
 ##==================##
 ##  Species info    ##
 ##==================##
-species: mus musculus
+species: musmusculus
 assembly: mm10
 genome_size: 2652783500
 read_length: 65
 chrom_sizes: '/wehisan/general/user_managed/grpu_jchoi_0/genomes/Mouse/mm10/mm10.chrom.sizes.txt'
-
+standard_chromosomes: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,'X','Y']
+       
 ##==================##
 ##     Samples      ##
 ##==================##

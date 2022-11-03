@@ -1,23 +1,46 @@
 ## list here all the main variables and functions used my scripts
 ## if any of these are used more than once in different scripts then they will be sourced from here
+library(yaml) 
+library(RColorBrewer)
+
+set.seed(2022)
+snakemake_config <- suppressWarnings(read_yaml('./config/snakemake-config.yaml')) ## this because genome size is generally > max integer range printed by R. leave it like this unless u'll need this entry
+project_config <- read_yaml('./config/project_config.yaml')
 
 ##=============##
 ## DIRECTORIES ##
 ##=============##
-base_dir = '/stornext/General/data/user_managed/grpu_jchoi_0/projects/davide/'
-project = 'atac-pipeline'
-vast_dir = paste('/vast/scratch/users/vespasiani.d/',project,'/',sep='')
+base_dir = project_config$baseDir 
+project = project_config$project 
+vast_dir = project_config$tmp_dir
 project_dir = paste(base_dir,project,'/',sep='')
 data_dir = paste(project_dir,'data/',sep='')
-out_dir = paste(project_dir,'out/',sep='')
+out_dir = paste(project_dir,'out/preprocessing/',sep='')
 tables_dir = paste(out_dir,'tables/',sep='')
 plots_dir = paste(out_dir,'plots/',sep='')
+bam_dir = paste(out_dir,'post-alignment/',sep='')
+
+## setwd for all R scripts
+setwd(project_dir)
 
 ##===========##
 ## VARIABLES ##
 ##===========##
-species = 'musmusculus'
-standard_chr <- paste0("chr", c(1:20),sep='')
+species = snakemake_config$species
+standard_chr = unlist(lapply(snakemake_config$standard_chromosomes,function(x)paste0("chr",x,sep='')))
+grange_cols = c('seqnames','start','end') 
+
+if (species %like% 'musculus'){
+  library(TxDb.Mmusculus.UCSC.mm10.knownGene)
+}else if (species %like% 'sapiens'){
+  library(TxDb.Hsapiens.UCSC.hg38.knownGene)
+}
+
+samples = snakemake_config$samples
+
+qualitative_palette = brewer.pal.info[brewer.pal.info$category == 'qual',]
+sample_palette = sample(unlist(mapply(brewer.pal, qualitative_palette$maxcolors, rownames(qualitative_palette))),length(samples))
+names(sample_palette) = samples
 
 ##===========##
 ## FUNCTIONS ##

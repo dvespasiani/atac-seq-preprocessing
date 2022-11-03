@@ -4,4 +4,4 @@
 baseDir:  /stornext/General/data/user_managed/grpu_jchoi_0/projects/davide/
 project: atac-pipeline
 modules: /stornext/General/data/user_managed/grpu_jchoi_0/projects/davide/atac-pipeline/config/modules.txt
-
+tmp_dir: /vast/scratch/users/vespasiani.d/tmp
