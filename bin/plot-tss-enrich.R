@@ -1,3 +1,5 @@
+#!/usr/bin/env Rscript
+
 ## script used to calculate the TSS enrichment. Use tn5-shifted-sorted.bam files
 library(dplyr)
 library(data.table)
@@ -13,16 +15,17 @@ encode_acceptable = 5
 
 outplot_dir <- create_dir(path=paste(plots_dir,'atac-seq-qc',sep='')) 
 
-cat('Reading all tn5-shifted bams \n')
+pattern = "*tn5-shifted-sorted.bam$"
+cat('Reading all', pattern, 'bam files located in the', bam_dir, ' directory\n')
 
 ## read aligned tn5-shifted bams
 param <- csaw::readParam(pe = "both",restrict=standard_chr,max.frag=1000)
-bams <-  list.files(bam_dir, recursive = T,full.names = T,pattern='*tn5-shifted-sorted.bam$')
+bams <-  list.files(bam_dir, recursive = T,full.names = T,pattern=pattern)
 alignment <- lapply(bams, function(x)GenomicAlignments::readGAlignments(x))
 
 txs <- GenomicFeatures::transcripts(TxDb.Mmusculus.UCSC.mm10.knownGene)
 
-cat('Calculating and plotting TSS enrichment \n')
+cat('Calculating the TSS enrichment score \n')
 
 get_tsse <- function(genomic_alignment,transcripts){
     tsse <- ATACseqQC::TSSEscore(genomic_alignment, transcripts)
@@ -34,6 +37,7 @@ get_tsse <- function(genomic_alignment,transcripts){
 tss_enrichment <- lapply(alignment,function(x)get_tsse(x,txs))
 tss_enrichment <- Map(mutate,tss_enrichment,sample=samples)%>%rbindlist()
 
+cat('Plotting the TSS enrichment score into the ', outplot_dir, ' directory \n')
 
 pdf(paste(outplot_dir,'tss-enrichment.pdf',sep=''),width=7,height=7)
 ggplot(tss_enrichment,aes(x=range,y=tsse_enrichment,col=sample))+

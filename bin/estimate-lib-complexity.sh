@@ -1,15 +1,14 @@
-#!/bin/bash
+#!/usr/bin/env bash
 ## original script comes from the ENCODE https://docs.google.com/document/d/1f0Cm4vRyDQDu0bMehHD7P7KOMxTOP-HiNoIvL1VcBt8/edit
 ## input: filtered bams (dup removed)
 ## output: table with different metrics used to estimate the library complexity
-module add bedtools/2.29.2
 
 helpFunction()
 {
    echo ""
    echo "Usage: $0 -i input_dir -o out_dir"
    echo -e "\t-i Directory where the bams/narrowPeak files are stored"
-   echo -e "\t-o path + name of output file"
+   echo -e "\t-o path for the output directory"
    exit 1 # Exit script after printing help
 }
 
@@ -28,17 +27,23 @@ while getopts "i:o:" flag; do
 done
 shift $((OPTIND -1))
 
-tmp_file="${out_dir}/tmp_file.qc"
-tmp_filename="${out_dir}/tmp_filename.txt"
-final_outfile="${out_dir}/library-complexity.txt"
+tmp_file="${out_dir}tmp_file.qc"
+tmp_filename="${out_dir}tmp_filename.txt"
+final_outfile="${out_dir}library-complexity.txt"
 
-for f in "${input_dir}"/*-nodup.bam ; do
+echo 
+echo
+echo "Estimating library complexity for filtered bam files located in the $input_dir directory"
+echo
+echo
+
+
+for f in ${input_dir}/*-nodup.bam ; do
 
     echo
     echo "Estimating library complexity for $f"
     echo
     echo "$(echo $(basename $f)| cut -f 1 -d '-')" > ${tmp_filename}
-
     bedtools bamtobed -i ${f} | \
     awk 'BEGIN{OFS="\t"}{print $1,$2,$3,$6}' | \
     grep -v 'chrM' | sort | uniq -c | \
@@ -53,5 +58,8 @@ echo -e "sample\tTotalReadPairs\tDistinctReadPairs\tOneReadPair\tTwoReadPairs\tN
 rm ${tmp_file} && rm results.txt && rm ${tmp_filename}
 
 echo
-echo "Done"
 echo
+echo "Done, the output file is this one here $final_outfile"
+echo
+echo
+

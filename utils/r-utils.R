@@ -12,13 +12,15 @@ project_config <- read_yaml('./config/project_config.yaml')
 ##=============##
 base_dir = project_config$baseDir 
 project = project_config$project 
-vast_dir = project_config$tmp_dir
 project_dir = paste(base_dir,project,'/',sep='')
+vast_dir = project_config$tmp_dir
 data_dir = paste(project_dir,'data/',sep='')
-out_dir = paste(project_dir,'out/preprocessing/',sep='')
-tables_dir = paste(out_dir,'tables/',sep='')
-plots_dir = paste(out_dir,'plots/',sep='')
-bam_dir = paste(out_dir,'post-alignment/',sep='')
+outdir = snakemake_config$outdir
+qcdir = snakemake_config$qcdir
+tables_dir = paste(outdir,'tables/',sep='')
+plots_dir = paste(outdir,'plots/',sep='')
+bam_dir = paste(outdir,'post-alignment/',sep='')
+logs_dir = snakemake_config$logs
 
 ## setwd for all R scripts
 setwd(project_dir)

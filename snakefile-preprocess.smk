@@ -19,10 +19,8 @@ genome_size = config['genome_size']
 genome_index = config['genome_index']
 blacklist = config['blacklist']
 chrom_sizes = config['chrom_sizes']
-
 sample = config['samples']
-
-# genome2bit_index = config['genome2bit_index']
+genome2bit_index = config['genome2bit_index']
 # merged_sample = config['merged_sample']
 
 # sample = list(itertools.chain(*config['augmented_samples'])) ## flattens list of lists
@@ -30,9 +28,9 @@ sample = config['samples']
 ##=================##
 ## I/O directories ##
 ##=================##
-outdir = 'out/preprocessing/'
-qcdir = outdir + 'qc/'
-logs = 'logs/'
+outdir = config['outdir']
+qcdir = config['qcdir']
+logs = config['logs']
 
 ##=================##
 ##   Parameters    ##

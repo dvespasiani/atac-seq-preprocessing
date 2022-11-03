@@ -1,10 +1,11 @@
+#!/usr/bin/env Rscript
+
 ## use this script to plot a summary of Bowtie2 alignment results
 library(dplyr)
 library(data.table)
 library(magrittr)
 library(ggplot2)
 library(ggpubr)
-library(argparse)
 
 source('./utils/r-utils.R')
 
@@ -12,14 +13,12 @@ encode_acceptable = 0.2
 encode_ideal = 0.3
 
 outplot_dir <- create_dir(path=paste(plots_dir,'atac-seq-qc',sep='')) 
+input_dir = paste(logs_dir,'alignment',sep='')
 
-parser <- ArgumentParser()
-parser$add_argument("-i", "--input_dir",help="Input directory containing the Bowtie2 log files")
-args <- parser$parse_args()
+files <- list.files(input_dir,full.names=T,recursive=F)
 
-cat('Parsing all files in input directory \n')
+cat("Parsing all these files:", paste(basename(files),collapse=' , '), " located in the ", input_dir, " directory \n")
 
-files <- list.files(args$i,full.names=T,recursive=F)
 qc_results <- lapply(files,function(x) {
     x <- fread(x,sep='\t',col.names='bowtie_output')[
         c(3,14),
@@ -30,23 +29,19 @@ qc_results <- lapply(files,function(x) {
             ][
                 ,fraction_reads:=as.numeric(oar)/100
                 ][
-                    ,class:=ifelse(bowtie_output %like% 'overall','overall_alignment_rate','uniquely_mappable')
+                    ,class:=ifelse(bowtie_output %like% 'overall','alignment_rate','uniquely_mappable')
                     ][
                         ,c('fraction_reads','class')
-                        ][
-                            ,metric:=ifelse(class %like% 'overall','alignment_rate','mappability')
                         ]
 })
 
 sample_names <- gsub(".*/","",gsub('\\.log.*','',files))
 qc_results <- Map(mutate,qc_results,sample=sample_names)%>%rbindlist()
-alignment_rate <- copy(qc_results)[metric %like% 'alignment']
 
-
-cat('Plotting Bowtie2 alignment summary results \n')
+cat('Plotting the Bowtie2 alignment summary results into the ', outplot_dir, ' directory \n')
 
 pdf(paste(outplot_dir,'bowtie2-alignment-qc.pdf',sep=''),width=7,height=7)
-ggplot(alignment_rate,aes(x=sample,y=fraction_reads,fill=sample))+ 
+ggplot(qc_results,aes(x=sample,y=fraction_reads,fill=sample))+ 
 geom_bar(stat="identity")+xlab('')+ylab('Bowtie2 Alignment rate')+
 geom_hline(yintercept=encode_acceptable)+
 scale_fill_manual(values=sample_palette)+

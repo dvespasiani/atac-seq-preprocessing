@@ -51,11 +51,24 @@ etc....
  ``` 
 This script will return you the total estimated number of k-mers found in your species genome assembly. If you need further info on this script look at [MR Crusoe *et al.*, 2015](http://dx.doi.org/10.12688/f1000research.6924.1). <br/>
 
-3. Make sure you have all the softwares installed in your R/python envs:
+   * A directory containing a Bowtie2 indexed genome. For this you can either run:
+```
+module load bowtie2/2.4.4
+bowtie2-build <your-species-genome>.fa <index-prefix-name>
+```
+or you could donwload it from the [bowtie webpage](https://bowtie-bio.sourceforge.net/bowtie2/manual.shtml#:~:text=Bowtie%202%20indexes%20the%20genome,and%20paired%2Dend%20alignment%20modes). In any case, remember to also download from the UCSC, the species genome sequence in the 2bit format as:
+
+```
+cd path/to/your/bowtie2/index/genome
+wget  http://hgdownload.cse.ucsc.edu/goldenpath/<your-species-assembly>/bigZips/<your-species-assembly>.2bit 
+```
+and specify this path in relative directives within the `config/snakemake-config.yaml` file.
+
+1. Make sure you have all the softwares installed in your R/python envs:
    * The `pybedtools` python module. For the moment I have installed it in my own `PYTHONPATH` dir (which is also specified in my `~/.bash_profile`) and I have specified this path in the `./bin/calculate-frip.py` script using the sys module in python. **However, this is not ideal**, but for the moment it works. I need to change it.
    * R libraries such as `yaml`, `data.table`, `argparse`, `GenomicAlignments`, `ATACseqQC`, `csaw`, `GenomicFeatures`, `TxDb.<your-species>.UCSC.<your-species-assembly>.knownGene`. All the other libraries should be pretty standards
 
-4. Once you know how many samples you are preprocessing, replace the following lines within the `utils/r-utils.R`:
+2. Once you know how many samples you are preprocessing, replace the following lines within the `utils/r-utils.R`:
 ```
 qualitative_palette = brewer.pal.info[brewer.pal.info$category == 'qual',]
 sample_palette = sample(unlist(mapply(brewer.pal, qualitative_palette$maxcolors, rownames(qualitative_palette))),length(samples))
@@ -99,7 +112,7 @@ The pipeline contained in this repo goes through the following steps:
 3. Alignment (Bowtie2)
 4. Post-alignment filtering 
 5. Peak-calling (MACS2)
-7. QCs generation, e.g. using deepTools and other metrics
+7. QCs generation, e.g. using deepTools and other custom scripts
 ### FastQC
 For ATAC-seq experiments, when running FastQC you can expect 3 modules returning a warining/failure signal:
 1. Per base sequence content because Tn5 has a strong sequence bias at the insertion site. 
@@ -114,8 +127,10 @@ I am using Bowtie2 to align reads to the genome assembly of the species of inter
 ### Peak calling
 To call peaks of chromatin accessiblity I am using MACS2 on Tn5-shifted BAM files. MACS2 parameters are defined as per ENCODE.
 ## Quality controls
-Here I am listing a series of QCs the snakemake pipeline will automatically run for you plus some others you can perform by running some executables scripts within the `bin/` directory. Some of these QCs come from the deeptools suite of commands, check out the [deepTools manual](https://deeptools.readthedocs.io/en/develop/index.html) for a complete understanding. <br/>
-All the QCs I am generating extra are by default located in the `out/preprocessing/plot/atac-seq-qc` directory. You can change this if you want to.
+Here I am listing all the QCs that are generated with this pipeline. Some of them are part of the snakemake pipeline and so you dont need to run extra scripts, while others are based oin custom scripts and can be run after the preprocessing steps are completed. automatically run for you plus some others you can perform on top of these. All the QCs I am generating extra are, by default, located in the `out/preprocessing/plot/atac-seq-qc` directory. You can change this if you want to. <br/>
+
+To perform the extra QC steps, you can either run the executable scripts contained in the `bin/` directory independently (see below), or you can just run the `utils/get-qcs.py` script. This script is a wrapper which simply calls each of the other executables using the default paths that are parsed from the config yaml files.
+
 ### Get peak and read counts
 Use `./bin/get-counts.sh -i <input_dir> -o <out_file>`  to obtain number of reads/peaks for each `*.bam$` and `*narrowPeak` file within the respective `out/preprocessing/` directories.
 ### Estimate library complexity

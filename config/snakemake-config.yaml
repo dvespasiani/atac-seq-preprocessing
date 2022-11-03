@@ -12,6 +12,10 @@ genome_index: /wehisan/general/user_managed/grpu_jchoi_0/genomes/Mouse/mm10_bowt
 blacklist: /wehisan/general/user_managed/grpu_jchoi_0/genomes/Mouse/mm10/mm10.blacklist.new.bed
 adapters: /wehisan/general/user_managed/grpu_jchoi_0/projects/davide/atac-pipeline/data/adapters/NexteraPE-PE.fa
 
+outdir: out/preprocessing/
+qcdir: out/preprocessing/qc/
+logs: logs/
+
 ##==================##
 ##  Species info    ##
 ##==================##
@@ -21,7 +25,8 @@ genome_size: 2652783500
 read_length: 65
 chrom_sizes: '/wehisan/general/user_managed/grpu_jchoi_0/genomes/Mouse/mm10/mm10.chrom.sizes.txt'
 standard_chromosomes: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,'X','Y']
-       
+genome2bit_index: /wehisan/general/user_managed/grpu_jchoi_0/genomes/Mouse/mm10_bowtie_index/mm10.2bit
+
 ##==================##
 ##     Samples      ##
 ##==================##
