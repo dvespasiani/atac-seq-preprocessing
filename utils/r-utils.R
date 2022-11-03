@@ -34,8 +34,10 @@ grange_cols = c('seqnames','start','end')
 
 if (species %like% 'musculus'){
   library(TxDb.Mmusculus.UCSC.mm10.knownGene)
+  transcripts <- GenomicFeatures::transcripts(TxDb.Mmusculus.UCSC.mm10.knownGene)
 }else if (species %like% 'sapiens'){
   library(TxDb.Hsapiens.UCSC.hg38.knownGene)
+  transcripts <- GenomicFeatures::transcripts(TxDb.Hsapiens.UCSC.hg38.knownGene)
 }
 
 samples = snakemake_config$samples

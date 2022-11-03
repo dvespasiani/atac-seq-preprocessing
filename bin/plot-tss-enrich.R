@@ -23,7 +23,7 @@ param <- csaw::readParam(pe = "both",restrict=standard_chr,max.frag=1000)
 bams <-  list.files(bam_dir, recursive = T,full.names = T,pattern=pattern)
 alignment <- lapply(bams, function(x)GenomicAlignments::readGAlignments(x))
 
-txs <- GenomicFeatures::transcripts(TxDb.Mmusculus.UCSC.mm10.knownGene)
+txs <- transcripts
 
 cat('Calculating the TSS enrichment score \n')
 

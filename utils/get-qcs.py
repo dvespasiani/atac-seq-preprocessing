@@ -19,6 +19,8 @@ def run_executable(exe, i = None,o = None):
     else:
         return (subprocess.call ([command, "-i " + i , "-o " + o]))
 
+print('\n Calling executable script to run extra QC steps \n')
+
 ## count number reads in each bam file 
 run_executable(exe = 'get-counts.sh', i = config['outdir'] + 'post-alignment' , o = config['qcdir']+ "qc-number-reads-bams.txt")
 
@@ -39,3 +41,5 @@ run_executable(exe = 'plot-peak-qcs.R')
 
 ## tss enrich
 run_executable(exe = 'plot-tss-enrich.R')
+
+print('\n Finished with performing extra QC steps \n')
