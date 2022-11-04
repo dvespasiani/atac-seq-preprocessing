@@ -11,16 +11,18 @@ project_config <- read_yaml('./config/project_config.yaml')
 ## DIRECTORIES ##
 ##=============##
 base_dir = project_config$baseDir 
-project = project_config$project 
-project_dir = paste(base_dir,project,'/',sep='')
+project_name = project_config$project 
+project_dir = paste(base_dir,project_name,'/',sep='')
 vast_dir = project_config$tmp_dir
 data_dir = paste(project_dir,'data/',sep='')
 outdir = snakemake_config$outdir
 qcdir = snakemake_config$qcdir
 tables_dir = paste(outdir,'tables/',sep='')
 plots_dir = paste(outdir,'plots/',sep='')
-bam_dir = paste(outdir,'post-alignment/',sep='')
+bam_dir = paste(outdir, snakemake_config$`post-alignment`,sep='') 
 logs_dir = snakemake_config$logs
+peaks_dir = paste(outdir,snakemake_config$`peak-calling`,sep='')
+consensus_peaks_dir = paste(outdir,snakemake_config$`consensus-peak`,sep='')
 
 ## setwd for all R scripts
 setwd(project_dir)
@@ -32,10 +34,11 @@ species = snakemake_config$species
 standard_chr = unlist(lapply(snakemake_config$standard_chromosomes,function(x)paste0("chr",x,sep='')))
 grange_cols = c('seqnames','start','end') 
 
+## if your species is not any of these two then change these lines accordingly
 if (species %like% 'musculus'){
   library(TxDb.Mmusculus.UCSC.mm10.knownGene)
   transcripts <- GenomicFeatures::transcripts(TxDb.Mmusculus.UCSC.mm10.knownGene)
-}else if (species %like% 'sapiens'){
+} else if (species %like% 'sapiens'){
   library(TxDb.Hsapiens.UCSC.hg38.knownGene)
   transcripts <- GenomicFeatures::transcripts(TxDb.Hsapiens.UCSC.hg38.knownGene)
 }

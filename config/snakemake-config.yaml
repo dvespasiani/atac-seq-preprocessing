@@ -4,8 +4,7 @@ author: Davide Vespasiani
 ##==================##
 ##  I/O directories ##
 ##==================##
-## here I am using absolute paths. 
-## You can always change them to relative but make sure to combine them when you set up these config variables in the main snakemake file 
+## Note that here I am using absolute paths. You can always make them relative but then you'll have to combine them in the main snakemake file 
 basedir: /wehisan/general/user_managed/grpu_jchoi_0/
 fastqdir: /wehisan/general/user_managed/grpu_jchoi_0/projects/davide/atac-pipeline/data/subsampled-files/
 genome_index: /wehisan/general/user_managed/grpu_jchoi_0/genomes/Mouse/mm10_bowtie_index/mm10
@@ -15,6 +14,19 @@ adapters: /wehisan/general/user_managed/grpu_jchoi_0/projects/davide/atac-pipeli
 outdir: out/preprocessing/
 qcdir: out/preprocessing/qc/
 logs: logs/
+plots: out/preprocessing/plots/atac-seq-qc/
+tables: out/preprocessing/tables/
+
+##==================##
+##   Rule names     ##
+##==================##
+fastqc: fastqc
+trim-adapter: trim-adapter
+align: alignment
+post-alignment: post-alignment
+deeptools: deeptools
+peak-calling: peak-calling
+consensus-peak: consensus-peak
 
 ##==================##
 ##  Species info    ##
@@ -42,7 +54,6 @@ all_samples: &all_samples 'all_samples'
 combined_sample: 
        - [*all_samples]
        - *samples
-
 
 ##===================##
 ## ENCODE parameters ##

@@ -27,6 +27,13 @@
 This repo contains a snakemake pipeline to preprocess fastq files generated from bulk ATAC-seq experiments. Preprocessing steps mainly come from the [ENCODE ATAC-seq processing standards](https://www.encodeproject.org/atac-seq/). For full protocol specifications [check this google doc](https://docs.google.com/document/d/1f0Cm4vRyDQDu0bMehHD7P7KOMxTOP-HiNoIvL1VcBt8/edit). I have noticed they have changed it since last time (mainly polished it), so keep an eye on this. In addition to what reported by the ENCODE, I have also included some extra scripts to perfom and visualise quality control metrics.
 ## Project set up
 To set up this pipeline you need to:
+1. **FIRST AND FOREMOST** = have your tmp directory within the vast/scratch filesystem (if you dont have permissions there, contact IT)
+If you do already have one then be sure the path it's in your `~/.bash_profile` and if not then save this line in there:
+```
+export TMPDIR=/vast/scratch/users/<your-username>/tmp
+```
+This is fundamental to have, if not for managing files and resourses in the cluster, simply because some commands of this pipeline will fail as they will fill up your base disk quota in no time. Anyhow, once you have it, modify the corresponding entry within the `snakemake-config.yaml` file (see right below here).
+
 1. Modify the entries in the `config/snakemake-config.yaml` file to your needs, such as:
 ```
 species: your-species
@@ -39,6 +46,8 @@ fastqdir: your-fastqdir-containing-fastq-files
 etc....
 
 ```
+Note that I am using full paths for most directives in the config yaml file. You could make them relative to a base directory to avoid repetition but you'll need to modify few entries in the main `snakemake-preprocess.smk` file
+
 2. Make sure you have all the information for your species, such as:
    * a chrom.sizes file containing the chromosome sizes. This can be obtained either from UCSC (the link should be something like `http://hgdownload.soe.ucsc.edu/goldenPath/<your-species-assembly>/bigZips/<your-species-assembly>.chrom.sizes`) or, alternatively, by running
 ```
@@ -48,7 +57,7 @@ etc....
    * the effective genome size for your species of interest which is based on the length of your sequencing reads. Again, you can find this info either [at this website](https://deeptools.readthedocs.io/en/develop/content/feature/effectiveGenomeSize.html) or, alternatively, by running
 ```
  python ./bin/unique-kmers.py -k <your-read-length> <path/to/genome/fasta/file.fa>
- ``` 
+``` 
 This script will return you the total estimated number of k-mers found in your species genome assembly. If you need further info on this script look at [MR Crusoe *et al.*, 2015](http://dx.doi.org/10.12688/f1000research.6924.1). <br/>
 
    * A directory containing a Bowtie2 indexed genome. For this you can either run:
@@ -64,11 +73,11 @@ wget  http://hgdownload.cse.ucsc.edu/goldenpath/<your-species-assembly>/bigZips/
 ```
 and specify this path in relative directives within the `config/snakemake-config.yaml` file.
 
-1. Make sure you have all the softwares installed in your R/python envs:
+3. Make sure you have all the softwares installed in your R/python envs:
    * The `pybedtools` python module. For the moment I have installed it in my own `PYTHONPATH` dir (which is also specified in my `~/.bash_profile`) and I have specified this path in the `./bin/calculate-frip.py` script using the sys module in python. **However, this is not ideal**, but for the moment it works. I need to change it.
-   * R libraries such as `yaml`, `data.table`, `argparse`, `GenomicAlignments`, `ATACseqQC`, `csaw`, `GenomicFeatures`, `TxDb.<your-species>.UCSC.<your-species-assembly>.knownGene`. All the other libraries should be pretty standards
+   * R libraries such as `yaml`, `data.table`, `GenomicAlignments`, `ATACseqQC`, `csaw`, `GenomicFeatures`, `TxDb.<your-species>.UCSC.<your-species-assembly>.knownGene`, `UpSetR`. All the other libraries should be pretty standard
 
-2. Once you know how many samples you are preprocessing, replace the following lines within the `utils/r-utils.R`:
+4. Once you know how many samples you are preprocessing, replace the following lines within the `utils/r-utils.R`:
 ```
 qualitative_palette = brewer.pal.info[brewer.pal.info$category == 'qual',]
 sample_palette = sample(unlist(mapply(brewer.pal, qualitative_palette$maxcolors, rownames(qualitative_palette))),length(samples))
@@ -89,18 +98,20 @@ utils/subsample-files.sh -i <indir> -o <outdir> -n <numbreads>
 ```
 
 This script will extract the first `n = number of reads` from all the files listed in the `i = input dir`. You can then run the entire pipeline interactively on this subset of reads. However, if you do so, remember to correctly specify the location of your subsampled fastq files in the `config/snakemake-config.yaml` file (hint: it's the `fastqdir` directive).
-Next, move the `runInteractively.sh` script outside this project directory and set up your interactive session as:
+Next, set up an interactive session on SLURM. I personally do it using my custom made script. In this case then move the `runInteractively.sh` script outside this project directory and set up your interactive session as:
 
 ```
-chmod +x runInteractively.sh
+chmod +x runInteractively.sh # it should already be executable though
 ./runInteractively.sh -p <your-project-name> # to change slurm salloc arguments (e.g., mem/time etc..) go to config/cluster_config.yaml
 eval "$(cat "$modules")"  # this loads all the modules listed in the config/modules.txt file
 ```
-Then simply run:
+Now you should have all the resources allocated and modules loaded in your own interactive environment. To then run the snakemake pipeline simply type:
 ```
 snakemake --cores 8 -s snakefile-preprocess.smk
 ```
-and you should get your results. <br/>
+and once its finished, if it doesnt crash, you should get your results. <br/>
+
+**PS:** Using the subsampled test files the pipeline is pretty quick in finishing. Only the set of rules using deepTools do take quite a bit to complete. This means that with the full fastq files this will likely take a while to finish. However, because 1) the pipeline is modular and 2) I defined a main and a qc group of analyses, you will be able to still investigate your peaks of chromatin accessibility while deepTools are still running in the background.
 
 ### In the background
 

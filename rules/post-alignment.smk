@@ -1,18 +1,16 @@
-## ===========================================================================================
-##  Post-alignment QCsto remove unmapped, duplicated, multimapped and low quality reads
-##  Removed also multimapping reads (MAPQ <=30) 
-## ===========================================================================================
-rule_name = 'post-alignment/'
+## =====================================================================================##
+##  Post-alignment QCsto remove unmapped, duplicated, multimapped and low quality reads ##
+## =====================================================================================##
 
 rule rmChrM:
   input:
     rules.align.output
   output:
-    outdir +  rule_name + "{sample}-nochrM.bam"
+    outdir +  rulename_postalign + "{sample}-nochrM.bam"
   group: 
     main
   log:
-    logs + rule_name + "{sample}-rmchrM.log"
+    logs + rulename_postalign + "{sample}-rmchrM.log"
   shell:
     "samtools view -h {input} | grep -v 'chrM' | samtools sort -o {output} 2>{log}"
  
@@ -20,13 +18,13 @@ rule encode_filters:
   input:
     rules.rmChrM.output
   output:
-    outdir +  rule_name + "{sample}-nochrM-encodefiltered.bam"
+    outdir +  rulename_postalign + "{sample}-nochrM-encodefiltered.bam"
   group: 
     main
   params:
     read_minQ = read_minQ
   log:
-    logs + rule_name + "{sample}-encode-filters.log"
+    logs + rulename_postalign + "{sample}-encode-filters.log"
   shell:
     "samtools view -b -F 1804 -q {params.read_minQ} -f 2 -u {input} | samtools sort -n -o {output}  2> {log}"
 
@@ -34,11 +32,11 @@ rule fixmate:
   input:
     rules.encode_filters.output
   output:
-    outdir +  rule_name + "{sample}-nochrM-encodefiltered-fixmate.bam"
+    outdir +  rulename_postalign + "{sample}-nochrM-encodefiltered-fixmate.bam"
   group: 
     main
   log:
-    logs + rule_name  + "{sample}-fixmate.log"
+    logs + rulename_postalign  + "{sample}-fixmate.log"
   shell:
     "samtools fixmate -r {input} {output} 2> {log}"
 
@@ -46,11 +44,11 @@ rule rmOrphanread:
   input:
     rules.fixmate.output
   output:
-    outdir + rule_name + "{sample}-nochrM-encodefiltered-fixmate-rmorphanread.bam"
+    outdir + rulename_postalign + "{sample}-nochrM-encodefiltered-fixmate-rmorphanread.bam"
   group: 
     main
   log:
-    logs + rule_name  + "{sample}-rmOrphanread.log"
+    logs + rulename_postalign  + "{sample}-rmOrphanread.log"
   shell:
     "samtools view -F 1804 -f 2 -u {input} | samtools sort -o {output} 2> {log}"
 
@@ -63,14 +61,14 @@ rule markDups:
   input:
     rules.rmOrphanread.output 
   output:
-    bam = outdir + rule_name  + "{sample}-nochrM-encodefiltered-fixmate-rmorphanread-dupmark.bam",
+    bam = outdir + rulename_postalign  + "{sample}-nochrM-encodefiltered-fixmate-rmorphanread-dupmark.bam",
     dupQC = qcdir + "{sample}-duplicate-rate.qc"
   group: 
     main
   params:
    mem = "-Xmx4g"
   log:
-    logs + rule_name + "{sample}-markDups.log"
+    logs + rulename_postalign + "{sample}-markDups.log"
   shell:
     """
     MarkDuplicates I={input} O={output.bam} \
@@ -82,11 +80,11 @@ rule dedup:
   input:
     rules.markDups.output.bam
   output:
-    outdir + rule_name + "{sample}-nochrM-encodefiltered-fixmate-rmorphanread-nodup.bam"
+    outdir + rulename_postalign + "{sample}-nochrM-encodefiltered-fixmate-rmorphanread-nodup.bam"
   group: 
     main
   log:
-    logs + rule_name + "{sample}-dedup.log"
+    logs + rulename_postalign + "{sample}-dedup.log"
   shell:
     "samtools view -h -b  -F 1804 -f 2 {input} > {output} 2> {log}"
 
@@ -97,11 +95,11 @@ rule indexBam:
   input:
     rules.dedup.output
   output:
-    outdir + rule_name + "{sample}-nochrM-encodefiltered-fixmate-rmorphanread-nodup.bai"
+    outdir + rulename_postalign + "{sample}-nochrM-encodefiltered-fixmate-rmorphanread-nodup.bai"
   group: 
     main
   log:
-    logs + rule_name + "{sample}-indexBam.log"
+    logs + rulename_postalign + "{sample}-indexBam.log"
   shell:
     "samtools index -c {input} {output} 2> {log}"
 
@@ -111,31 +109,33 @@ rule Tn5_shift:
     bam = rules.dedup.output,
     bai = rules.indexBam.output
   output:
-    outdir + rule_name + "{sample}-tn5-shifted.bam"
+    outdir + rulename_postalign + "{sample}-tn5-shifted.bam"
   group: 
     main
   log:
-    logs + rule_name + "{sample}-tn5-shifted.log"
+    logs + rulename_postalign + "{sample}-tn5-shifted.log"
   shell:
     "alignmentSieve -b {input.bam} -o {output} --ATACshift 2> {log}"
 
-# rule poolbams:
-#   input:
-#     samples = expand(aligment_outdir + "{sample}_tn5_shifted.bam",sample = sample)
-#   output:
-#     aligment_outdir + "{merged_sample}_tn5_shifted.bam"
-#   shell:
-#     "samtools merge {output} {input.samples}"
+## pool together bams and create an extra big bam file and process this one along with the others.
+## you'll need it for extracting the set of consensus peaks across all your samples
+rule poolbams:
+  input:
+    samples = expand(outdir + rulename_postalign + "{sample}-tn5-shifted.bam",sample = sample)
+  output:
+    outdir + rulename_postalign + "{all_samples}-tn5-shifted.bam"
+  shell:
+    "samtools merge {output} {input.samples}"
 
 rule Tn5_shifted_sort:
   input:
-    rules.Tn5_shift.output
+    outdir + rulename_postalign + "{combined_sample}-tn5-shifted.bam"
   output:
-    outdir + rule_name + "{sample}-tn5-shifted-sorted.bam"
+    outdir + rulename_postalign + "{combined_sample}-tn5-shifted-sorted.bam"
   group: 
     main
   log:
-    logs + rule_name + "{sample}-tn5-shifted-sorted.log"
+    logs + rulename_postalign + "{combined_sample}-tn5-shifted-sorted.log"
   shell:
     "samtools sort {input} -O BAM -o {output} 2> {log}"
 
@@ -143,10 +143,10 @@ rule index_Tn5Bams:
   input:
     rules.Tn5_shifted_sort.output
   output:
-    outdir + rule_name + "{sample}-tn5-shifted-sorted.bam.bai"
+    outdir + rulename_postalign + "{combined_sample}-tn5-shifted-sorted.bam.bai"
   group: 
     main
   log:
-    logs + rule_name + "{sample}-tn5-shifted-sorted-index.log"
+    logs + rulename_postalign + "{combined_sample}-tn5-shifted-sorted-index.log"
   shell:
     "samtools index -c {input} {output} 2> {log}"

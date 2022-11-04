@@ -1,5 +1,3 @@
-#!/usr/bin/env Rscript
-
 ## use this script to plot a summary of Bowtie2 alignment results
 library(dplyr)
 library(data.table)
@@ -7,13 +5,15 @@ library(magrittr)
 library(ggplot2)
 library(ggpubr)
 
-source('./utils/r-utils.R')
 
 encode_acceptable = 0.2
 encode_ideal = 0.3
+source('./utils/r-utils.R')
 
-outplot_dir <- create_dir(path=paste(plots_dir,'atac-seq-qc',sep='')) 
-input_dir = paste(logs_dir,'alignment',sep='')
+args <- commandArgs(trailingOnly=TRUE) 
+
+input_dir = args[[1]]
+output_plot = args[[2]]
 
 files <- list.files(input_dir,full.names=T,recursive=F)
 
@@ -35,12 +35,11 @@ qc_results <- lapply(files,function(x) {
                         ]
 })
 
-sample_names <- gsub(".*/","",gsub('\\.log.*','',files))
-qc_results <- Map(mutate,qc_results,sample=sample_names)%>%rbindlist()
+qc_results <- Map(mutate,qc_results,sample=samples)%>%rbindlist()
 
-cat('Plotting the Bowtie2 alignment summary results into the ', outplot_dir, ' directory \n')
+cat('Plotting the Bowtie2 alignment summary results \n')
 
-pdf(paste(outplot_dir,'bowtie2-alignment-qc.pdf',sep=''),width=7,height=7)
+pdf(output_plot,width=7,height=7)
 ggplot(qc_results,aes(x=sample,y=fraction_reads,fill=sample))+ 
 geom_bar(stat="identity")+xlab('')+ylab('Bowtie2 Alignment rate')+
 geom_hline(yintercept=encode_acceptable)+
@@ -55,4 +54,4 @@ theme(
     )
 dev.off()
 
-cat('Done \n')
+cat('Done, plot can be found at:' , output_plot, '\n')

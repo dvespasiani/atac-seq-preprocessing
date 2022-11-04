@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 ## original script comes from the ENCODE https://docs.google.com/document/d/1f0Cm4vRyDQDu0bMehHD7P7KOMxTOP-HiNoIvL1VcBt8/edit
 ## input: filtered bams (dup removed)
 ## output: table with different metrics used to estimate the library complexity
@@ -8,17 +7,18 @@ helpFunction()
    echo ""
    echo "Usage: $0 -i input_dir -o out_dir"
    echo -e "\t-i Directory where the bams/narrowPeak files are stored"
-   echo -e "\t-o path for the output directory"
+   echo -e "\t-o path for the output file"
    exit 1 # Exit script after printing help
 }
 
+# outfile
 while getopts "i:o:" flag; do
     case "${flag}" in
         i) 
             input_dir="$OPTARG"
             ;;
         o) 
-            out_dir="$OPTARG"
+            outfile="$OPTARG"
             ;;
         ?) 
             helpFunction 
@@ -27,9 +27,8 @@ while getopts "i:o:" flag; do
 done
 shift $((OPTIND -1))
 
-tmp_file="${out_dir}tmp_file.qc"
-tmp_filename="${out_dir}tmp_filename.txt"
-final_outfile="${out_dir}library-complexity.txt"
+tmp_file="tmp_file.qc"
+tmp_filename="tmp_filename.txt"
 
 echo 
 echo
@@ -53,13 +52,13 @@ for f in ${input_dir}/*-nodup.bam ; do
     paste -d "\t" ${tmp_filename} results.txt >> ${tmp_file}
 done 
 
-echo -e "sample\tTotalReadPairs\tDistinctReadPairs\tOneReadPair\tTwoReadPairs\tNRF\tPBC1\tPBC2" | cat - ${tmp_file} > ${final_outfile}
+echo -e "sample\tTotalReadPairs\tDistinctReadPairs\tOneReadPair\tTwoReadPairs\tNRF\tPBC1\tPBC2" | cat - ${tmp_file} > ${outfile}
 
 rm ${tmp_file} && rm results.txt && rm ${tmp_filename}
 
 echo
 echo
-echo "Done, the output file is this one here $final_outfile"
+echo "Done, the output file is this one here $outfile"
 echo
 echo
 

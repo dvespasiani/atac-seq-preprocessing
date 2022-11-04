@@ -1,29 +1,28 @@
 ##===========================##
 ## 10. Peak calling (MACS2)  ##
 ##===========================##
-rule_name = 'peak_calling/'
 
 rule peakCalling:
   input:
     bam = rules.Tn5_shifted_sort.output,
     bai = rules.index_Tn5Bams.output
   output:
-    peaks_xls = outdir + rule_name + "{sample}-macs2_peaks.xls",
-    pileup = outdir + rule_name + "{sample}-macs2_treat_pileup.bdg",
-    lamb = outdir + rule_name + "{sample}-macs2_control_lambda.bdg",
-    summit = outdir + rule_name + "{sample}-macs2_summits.bed",
-    narrowPeak = outdir + rule_name + "{sample}-macs2_peaks.narrowPeak"
+    peaks_xls = outdir + rulename_peak + "{combined_sample}-macs2_peaks.xls",
+    pileup = outdir + rulename_peak + "{combined_sample}-macs2_treat_pileup.bdg",
+    lamb = outdir + rulename_peak + "{combined_sample}-macs2_control_lambda.bdg",
+    summit = outdir + rulename_peak + "{combined_sample}-macs2_summits.bed",
+    narrowPeak = outdir + rulename_peak + "{combined_sample}-macs2_peaks.narrowPeak"
   group: 
     main
   params:
-    name = "{sample}-macs2",
-    outdir = outdir + rule_name,
+    name = "{combined_sample}-macs2",
+    outdir = outdir + rulename_peak,
     fragment_size = fragment_size,
     shift = shift,
     genome_size = genome_size,
     pval_thresh = pval_thresh
   log:
-    logs + rule_name + "{sample}-peak-calling.log"
+    logs + rulename_peak + "{combined_sample}-peak-calling.log"
   shell:
     """
     macs2 callpeak --format BAMPE --treatment {input.bam} \
@@ -36,13 +35,13 @@ rule rm_blacklisted_peaks:
   input:
     rules.peakCalling.output.narrowPeak
   output:
-    outdir + rule_name + "{sample}-macs2-peaks-filtered.narrowPeak.gz"
+    outdir + rulename_peak + "{combined_sample}-macs2-peaks-filtered.narrowPeak.gz"
   params:
     blacklist = blacklist
   group: 
     main
   log:
-    logs + rule_name + "{sample}_blacklist_removed.log"
+    logs + rulename_peak + "{combined_sample}_blacklist_removed.log"
   shell:
     """
     bedtools intersect -v -a {input} -b {params.blacklist} \
@@ -56,9 +55,9 @@ rule sort_peaks:
   input:
     rules.rm_blacklisted_peaks.output
   output:
-    outdir + rule_name + "{sample}-macs2-peaks-filtered-sorted.narrowPeak.gz"
+    outdir + rulename_peak + "{combined_sample}-macs2-peaks-filtered-sorted.narrowPeak.gz"
   log:
-     logs + rule_name + "{sample}-sorted-narrowpeaks.log"
+     logs + rulename_peak + "{combined_sample}-sorted-narrowpeaks.log"
   params:
     npeaks=npeaks
   group: 
@@ -79,11 +78,11 @@ rule FE_peak_signal_tracks:
    treatment = rules.peakCalling.output.pileup,
    control = rules.peakCalling.output.lamb
   output:
-    outdir + rule_name + "{sample}-macs2_FE.bdg"
+    outdir + rulename_peak + "{combined_sample}-macs2_FE.bdg"
   group: 
     main
   log:
-   logs + rule_name + "{sample}-fe-peak-signal-track.log"
+   logs + rulename_peak + "{combined_sample}-fe-peak-signal-track.log"
   shell:
     """
     macs2 bdgcmp -t {input.treatment} -c {input.control} \
@@ -94,9 +93,9 @@ rule clean_FE_signal:
   input:
    rules.FE_peak_signal_tracks.output
   output:
-    outdir + rule_name + "{sample}-fe-signal.bedgraph"
+    outdir + rulename_peak + "{combined_sample}-fe-signal.bedgraph"
   log:
-   logs + rule_name + "{sample}-clean-FE-peaks.log"
+   logs + rulename_peak + "{combined_sample}-clean-FE-peaks.log"
   params:
     chrom_sizes = chrom_sizes
   group: 
@@ -111,11 +110,11 @@ rule sort_FE_bedGraph:
   input:
    rules.clean_FE_signal.output 
   output:
-    outdir + rule_name + "{sample}-fe-signal-sorted.bedgraph"
+    outdir + rulename_peak + "{combined_sample}-fe-signal-sorted.bedgraph"
   group: 
     main
   log:
-   logs + rule_name + "{sample}-sort-bedGraph.log"
+   logs + rulename_peak + "{combined_sample}-sort-bedGraph.log"
   shell:
    "sort -k1,1 -k2,2n {input} > {output} 2> {log}"
 
@@ -123,11 +122,11 @@ rule FE_bedGraph2bigWig:
   input:
    rules.sort_FE_bedGraph.output
   output:
-   outdir + rule_name + "{sample}-fe-signal.bigwig"
+   outdir + rulename_peak + "{combined_sample}-fe-signal.bigwig"
   group: 
     main
   log:
-   logs + rule_name + "{sample}-bedGraph2bigWig.log"
+   logs + rulename_peak + "{combined_sample}-bedGraph2bigWig.log"
   params:
     chrom_sizes = chrom_sizes
   shell:
@@ -145,11 +144,11 @@ rule sval:
   input:
    rules.peakCalling.output.narrowPeak
   output:
-   outdir + rule_name + "{sample}-ppois-sval"
+   outdir + rulename_peak + "{combined_sample}-ppois-sval"
   group: 
     main
   log:
-   logs + rule_name + "{sample}-sval-calculation.log"
+   logs + rulename_peak + "{combined_sample}-sval-calculation.log"
   shell:
    """
    (wc -l <(gunzip -nc {input}) \
@@ -162,13 +161,13 @@ rule ppois_peak_signal_tracks:
    treatment = rules.peakCalling.output.pileup,
    control = rules.peakCalling.output.lamb
   output:
-    outdir + rule_name + "{sample}-macs2_ppois.bdg"
+    outdir + rulename_peak + "{combined_sample}-macs2_ppois.bdg"
   group: 
     main
   log:
-    logs + rule_name + "{sample}-ppois-peak-signaltrack.log"
+    logs + rulename_peak + "{combined_sample}-ppois-peak-signaltrack.log"
   run:
-   for filename in glob.glob(outdir + rule_name + '*-ppois-sval'):
+   for filename in glob.glob(outdir + rulename_peak + '*-ppois-sval'):
       sval = open(filename).read()
       shell("""macs2 bdgcmp -t {input.treatment} -c {input.control} --ofile {output} \
       -m ppois -S {sval} 2> {log}""")
@@ -177,11 +176,11 @@ rule clean_ppois_signal:
   input:
    rules.ppois_peak_signal_tracks.output
   output:
-    outdir + rule_name + "{sample}-ppois-signal.bedgraph"
+    outdir + rulename_peak + "{combined_sample}-ppois-signal.bedgraph"
   group: 
     main
   log:
-   logs + rule_name + "{sample}-clean-ppois-peaks.log"
+   logs + rulename_peak + "{combined_sample}-clean-ppois-peaks.log"
   params:
     chrom_sizes = chrom_sizes
   shell:
@@ -194,11 +193,11 @@ rule sort_ppois_bedGraph:
   input:
    rules.clean_ppois_signal.output
   output:
-    outdir + rule_name + "{sample}-ppois-signal-sorted.bedgraph"
+    outdir + rulename_peak + "{combined_sample}-ppois-signal-sorted.bedgraph"
   group: 
     main
   log:
-   logs + rule_name + "{sample}-sort-ppois-bedGraph.log"
+   logs + rulename_peak + "{combined_sample}-sort-ppois-bedGraph.log"
   shell:
    "sort -k1,1 -k2,2n {input} > {output} 2> {log}"
 
@@ -206,11 +205,11 @@ rule ppois_bedGraph2bigWig:
   input:
    rules.sort_ppois_bedGraph.output
   output:
-   outdir + rule_name + "{sample}-ppois-signal.bigwig"
+   outdir + rulename_peak + "{combined_sample}-ppois-signal.bigwig"
   group: 
     main
   log:
-   logs + rule_name + "{sample}-ppois-bedGraph2bigWig.log"
+   logs + rulename_peak + "{combined_sample}-ppois-bedGraph2bigWig.log"
   params:
     chrom_sizes = chrom_sizes 
   shell:
@@ -226,11 +225,11 @@ rule frip:
    bams = rules.Tn5_shifted_sort.output,
    peaks = rules.sort_peaks.output
   output:
-    qcdir + "{sample}-frip.txt"
+    qcdir + "{combined_sample}-frip.txt"
   group: 
     main
   log:
-   logs + rule_name + "{sample}-FRiP.log"
+   logs + rulename_peak + "{combined_sample}-FRiP.log"
   run:
    shell("python3 ./bin/calculate-frip.py {input.bams} {input.peaks} > {output} 2> {log}")
 

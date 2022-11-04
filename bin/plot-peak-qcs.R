@@ -1,5 +1,3 @@
-#!/usr/bin/env Rscript
-
 ## Script to produce some extra QCs on MACS2 peaks 
 library(data.table)
 library(magrittr)
@@ -9,10 +7,12 @@ library(ggpubr)
 
 source('./utils/r-utils.R')
 
-outplot_dir <- create_dir(path=paste(plots_dir,'atac-seq-qc',sep='')) 
+args <- commandArgs(trailingOnly=TRUE) 
 
-pattern = "*-filtered-sorted.narrowPeak.gz"
-input_dir = paste(outdir,'peak_calling/',sep='')
+input_dir = args[[1]]
+output_plot = args[[2]]
+
+pattern = paste(paste(samples,"-macs2-peaks-filtered-sorted.narrowPeak.gz",sep=''),collapse="|")
 
 cat ('Parsing all the ', pattern, 'files, located in the ' , input_dir, '\n')
 
@@ -23,18 +23,17 @@ peaks <- lapply(peak_files,function(x)
             ,width:=end-start
         ]
 )
-names(peaks) = samples
-peaks <- Map(mutate,peaks,samples=samples)%>%rbindlist()
+names(peaks)  = samples
+peaks <- Map(mutate,peaks,sample=samples)%>%rbindlist()
 
 peaks <- peaks[,rounded_width:=plyr::round_any(width, 100)] 
 
-cat('Plotting the peak QC results into the ', outplot_dir, ' directory \n')
+cat('Plotting the peak QC results \n')
 
-pdf(paste(outplot_dir,'distribution-peak-sizes.pdf',sep=''),width=7,height=10)
-ggplot(peaks,aes(x=rounded_width,fill=samples))+
+pdf(output_plot,width=7,height=7)
+ggplot(peaks,aes(x=rounded_width,fill=sample))+
     geom_bar()+
     scale_fill_manual(values=sample_palette)+
-    facet_wrap(samples~.,ncol=2)+
     ylab('Number of peaks')+ xlab('Peak size')+
     theme_classic()+
     theme(
@@ -43,4 +42,4 @@ ggplot(peaks,aes(x=rounded_width,fill=samples))+
         )
 dev.off()
 
-cat('Done \n')
+cat('Done, plot can be found at:' , output_plot, '\n')

@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
 usage(){
    echo ""
    echo "Usage: $0 -p <project directory>"

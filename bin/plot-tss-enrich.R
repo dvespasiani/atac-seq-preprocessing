@@ -13,10 +13,14 @@ source('./utils/r-utils.R')
 encode_ideal = 7
 encode_acceptable = 5
 
-outplot_dir <- create_dir(path=paste(plots_dir,'atac-seq-qc',sep='')) 
+args <- commandArgs(trailingOnly=TRUE) 
 
-pattern = "*tn5-shifted-sorted.bam$"
-cat('Reading all', pattern, 'bam files located in the', bam_dir, ' directory\n')
+input_dir = args[[1]]
+output_plot = args[[2]]
+
+pattern = paste(paste(samples,"-tn5-shifted-sorted.bam$",sep=''),collapse="|")
+
+cat('Reading all', pattern, 'bam files located in the', input_dir, ' directory\n')
 
 ## read aligned tn5-shifted bams
 param <- csaw::readParam(pe = "both",restrict=standard_chr,max.frag=1000)
@@ -37,9 +41,9 @@ get_tsse <- function(genomic_alignment,transcripts){
 tss_enrichment <- lapply(alignment,function(x)get_tsse(x,txs))
 tss_enrichment <- Map(mutate,tss_enrichment,sample=samples)%>%rbindlist()
 
-cat('Plotting the TSS enrichment score into the ', outplot_dir, ' directory \n')
+cat('Plotting the TSS enrichment score \n')
 
-pdf(paste(outplot_dir,'tss-enrichment.pdf',sep=''),width=7,height=7)
+pdf(output_plot,width=7,height=7)
 ggplot(tss_enrichment,aes(x=range,y=tsse_enrichment,col=sample))+
     geom_line(size=1)+
     geom_hline(yintercept=encode_acceptable)+
@@ -55,7 +59,7 @@ ggplot(tss_enrichment,aes(x=range,y=tsse_enrichment,col=sample))+
         )
 dev.off()
 
-cat('Done \n')
+cat('Done, plot can be found at:' , output_plot, '\n')
 
 
 
