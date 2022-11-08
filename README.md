@@ -5,7 +5,6 @@
   - [Running the pipeline](#running-the-pipeline)
     - [Interactively](#interactively)
     - [In the background](#in-the-background)
-  - [Then, just like before, you should get all your results in the `out/` directory and log files in the `logs/` directory. <br/>](#then-just-like-before-you-should-get-all-your-results-in-the-out-directory-and-log-files-in-the-logs-directory-)
   - [Pipeline overview](#pipeline-overview)
     - [FastQC](#fastqc)
     - [Adaptor trimming](#adaptor-trimming)
@@ -129,14 +128,11 @@ and once its finished, if it doesnt crash, you should get all your results in th
 
 ### In the background
 To run the pipeline on the background run the following lines:
-
 ```
 mkdir slurm-report 
 sbatch utils/run-on-cluster.sh
-
 ```
 
-Then, just like before, you should get all your results in the `out/` directory and log files in the `logs/` directory. <br/>
 ----
 ## Pipeline overview
 The pipeline contained in this repo goes through the following steps:
