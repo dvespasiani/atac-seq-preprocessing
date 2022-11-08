@@ -18,7 +18,7 @@ default-resources:
   - partition=regular
 jobs: 100
 latency-wait: 60
-cores: 8
+cores: 3
 restart-times: 1
 max-jobs-per-second: 1
 keep-going: True

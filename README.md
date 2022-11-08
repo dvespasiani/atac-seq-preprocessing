@@ -103,7 +103,7 @@ I suggest running interactive sessions to test/develop this pipeline using a sub
 utils/subsample-files.sh -i <indir> -o <outdir> -n <numbreads>
 e.g., ./utils/subsample-files.sh -i /wehisan/general/user_managed/grpu_jchoi_0/received/AnneMarie/annemarie_250822  \
 -o /wehisan/general/user_managed/grpu_jchoi_0/projects/davide/atac-pipeline/data/subsampled-files/ \
--n 1000
+-n 3000
 ```
 This script will extract the first `n = number of reads` from all the files listed in the `i = input dir`. You can then run the entire pipeline interactively on this subset of reads. However, if you do so, remember to correctly specify the location of your subsampled fastq files in the `config/snakemake-config.yaml` file, which is defined in the `fastqdir` directive. <br/>
 

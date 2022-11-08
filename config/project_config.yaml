@@ -2,7 +2,7 @@
 ##     Project I/O dirs     ##
 ##==========================##
 project_config: {
-    baseDir:  /stornext/General/data/user_managed/grpu_jchoi_0/projects/davide/,
+    baseDir:  /stornext/General/data/user_managed/grpu_jchoi_0/projects/davide,
     project: atac-pipeline,
     tmp_dir: /vast/scratch/users/vespasiani.d/tmp
 }

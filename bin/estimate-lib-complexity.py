@@ -7,14 +7,14 @@
 import os
 from collections import defaultdict
 import pandas as pd
-from snakemake.io import *
 import subprocess
 
+# input_file = "out/alignment/all_samples-tn5-shifted-sorted.bam"
 input_file = snakemake.input[0]
 output = snakemake.output[0]
 
 input_dir = os.path.dirname(input_file) + '/'
-files = [input_dir + f for f in os.listdir(input_dir) if f.endswith('rmorphanread.bam')]
+files = [input_dir + f for f in os.listdir(input_dir) if f.endswith('fixmate.bam')]
 
 keys = ['sample','TotalReadPairs','DistinctReadPairs','OneReadPair','TwoReadPairs','NRF','PBC1','PBC2']
 list_dict = []
@@ -43,3 +43,4 @@ df.to_csv(output,index=False,header=True,sep='\t')
 print('')
 print('Done')
 print('')
+

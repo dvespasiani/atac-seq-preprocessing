@@ -114,7 +114,7 @@ rule all:
             expand(qcdir + "{combined_sample}-frip.txt",combined_sample=combined_sample),
 
             
-            # deeptools
+            ## deeptools
             expand(outdir + rulename_deeptools + "{sample}-noblacklist.bam",sample=sample),
             expand(outdir + rulename_deeptools + "{sample}-noblacklist.bai",sample=sample),
             expand(outdir + rulename_deeptools + "{sample}-SeqDepthNorm.bw",sample=sample),

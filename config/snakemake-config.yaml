@@ -14,7 +14,7 @@ adapters: /wehisan/general/user_managed/grpu_jchoi_0/projects/davide/atac-pipeli
 outdir: out/
 qcdir: out/qc/
 logs: logs/
-plots: out/
+plots: out/plots/
 tables: out/tables/
 
 ##==================##
@@ -46,7 +46,6 @@ genome2bit_index: /wehisan/general/user_managed/grpu_jchoi_0/genomes/Mouse/mm10_
 samples: &samples
        - Ad2_10_S7_L001
        - Ad2_11_S8_L001
-       - Ad2_1_S1_L001
 
 ## these lines below will combine all the samples into a single big sample file
 ## to make snakemake combining all the aligned and filtered reads into a one big file and call accessible chromatin peaks also on this one

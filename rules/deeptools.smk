@@ -5,6 +5,8 @@
 ## c) fingerprint
 ## d) BAM coverage
 ##=========================================
+priority = 0
+
 dedup_bam = outdir + "alignment/{sample}-nochrM-encodefiltered-fixmate-rmorphanread-nodup.bam"
 index_bam = outdir + "alignment/{sample}-nochrM-encodefiltered-fixmate-rmorphanread-nodup.bai"
 
@@ -19,6 +21,8 @@ rule deeptools_noblacklist:
    blacklist = blacklist
   group: 
    qc
+  priority:
+    priority
   log:
     logs + rulename_deeptools + "{sample}-deeptools-noblacklist.log"
   shell:
@@ -31,6 +35,8 @@ rule deeptools_noblacklist_index:
     outdir + rulename_deeptools + "{sample}-noblacklist.bai"
   group: 
    qc
+  priority:
+    priority
   log:
     logs + rulename_deeptools + "{sample}-deeptools-noblacklist-index.log"
   shell:
@@ -44,6 +50,8 @@ rule deeptools_coverage:
     outdir + rulename_deeptools + "{sample}-SeqDepthNorm.bw"
   group: 
    qc
+  priority:
+    priority
   params:
     genome_size = genome_size
   log:
@@ -65,6 +73,8 @@ rule deeptools_plot_coverage:
    sample = 25000000
   group: 
    qc
+  priority:
+    priority
   log:
    logs + rulename_deeptools + "deeptools-plot-bam-coverage.log"
   shell:
@@ -86,6 +96,8 @@ rule deeptools_fingerprint:
    read_minQ = read_minQ
   group: 
    qc
+  priority:
+    priority
   log:
    logs + rulename_deeptools + "deeptools-plot-fingerprint.log"
   shell:
@@ -109,6 +121,8 @@ rule computeGCbias:
    threads = 8
   group: 
    qc
+  priority:
+    priority
   log:
    logs + rulename_deeptools + "{sample}-deeptools-GC-content.log"
   shell:
@@ -129,6 +143,8 @@ rule deeptools_summary:
   threads: 5
   group: 
    qc
+  priority:
+    priority
   log:
     logs + rulename_deeptools + "deeptools-summary.log"
   shell:
@@ -145,6 +161,8 @@ rule deeptools_correlation:
     matrix = outdir + rulename_deeptools  + "pearson-corr-multibamsum-matrix.txt"
   group: 
    qc
+  priority:
+    priority
   log:
     logs + rulename_deeptools + "deeptools-correlation.log"
   shell:
