@@ -133,7 +133,9 @@ To run the pipeline on the background run the following lines:
 ```
 mkdir slurm-report 
 sbatch utils/run-on-cluster.sh
+
 ```
+
 Then, just like before, you should get all your results in the `out/` directory and log files in the `logs/` directory. <br/>
 ----
 ## Pipeline overview
