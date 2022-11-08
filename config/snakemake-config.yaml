@@ -11,11 +11,11 @@ genome_index: /wehisan/general/user_managed/grpu_jchoi_0/genomes/Mouse/mm10_bowt
 blacklist: /wehisan/general/user_managed/grpu_jchoi_0/genomes/Mouse/mm10/mm10.blacklist.new.bed
 adapters: /wehisan/general/user_managed/grpu_jchoi_0/projects/davide/atac-pipeline/data/adapters/NexteraPE-PE.fa
 
-outdir: out/preprocessing/
-qcdir: out/preprocessing/qc/
+outdir: out/
+qcdir: out/qc/
 logs: logs/
-plots: out/preprocessing/plots/atac-seq-qc/
-tables: out/preprocessing/tables/
+plots: out/
+tables: out/tables/
 
 ##==================##
 ##   Rule names     ##
@@ -23,10 +23,10 @@ tables: out/preprocessing/tables/
 fastqc: fastqc
 trim-adapter: trim-adapter
 align: alignment
-post-alignment: post-alignment
 deeptools: deeptools
 peak-calling: peak-calling
 consensus-peak: consensus-peak
+atac-qc: atac-qc 
 
 ##==================##
 ##  Species info    ##

@@ -6,19 +6,15 @@ library(ggpubr)
 
 source('./utils/r-utils.R')
 
-encode_acceptable = 0.8
-encode_ideal = 0.95
+encode_acceptable = 0.2
+encode_ideal = 0.3
 
-args <- commandArgs(trailingOnly=TRUE) 
-
-input_dir = args[[1]]
-output_plot = args[[2]]
+input_file = unlist(snakemake@input[[1]])
+output_plot = unlist(snakemake@output[[1]])
+pattern = paste(paste(samples,"-frip.txt",sep=''),collapse="|")
+files <- list.files(dirname(input_file),recursive=F,full.names=T,pattern=pattern)
 
 ## FRiP
-files <- list.files(input_dir,full.names=T,recursive=F,pattern='frip.txt')
-
-cat("Parsing all these files:", paste(basename(files),collapse=' , '), " located in the ", input_dir, " directory \n")
-
 qc_results <- lapply(files,function(x){
     x <- fread(x,sep='\t',header=T,col.names='results')[2,][
         ,frip:=round(as.numeric(gsub('.*=','',results)),2)
@@ -47,4 +43,4 @@ theme(
     )
 dev.off()
 
-cat('Done, plot can be found at:' , output_plot, '\n')
+cat('Done \n')

@@ -7,16 +7,11 @@ library(ggpubr)
 
 source('./utils/r-utils.R')
 
-args <- commandArgs(trailingOnly=TRUE) 
-
-input_dir = args[[1]]
-output_plot = args[[2]]
+input_file = unlist(snakemake@input[[1]])
+output_plot = unlist(snakemake@output[[1]])
 
 pattern = paste(paste(samples,"-macs2-peaks-filtered-sorted.narrowPeak.gz",sep=''),collapse="|")
-
-cat ('Parsing all the ', pattern, 'files, located in the ' , input_dir, '\n')
-
-peak_files <- list.files(input_dir,full.names=T, recursive=F,pattern=pattern)
+peak_files <- list.files(dirname(input_file),recursive=F,full.names=T,pattern=pattern)
 
 peaks <- lapply(peak_files,function(x)
     x<-fread(x,sep='\t',header=F,select=c(1:3),col.names=grange_cols)[
@@ -33,6 +28,7 @@ cat('Plotting the peak QC results \n')
 pdf(output_plot,width=7,height=7)
 ggplot(peaks,aes(x=rounded_width,fill=sample))+
     geom_bar()+
+    facet_wrap(~ sample,ncol=floor(length(samples)/2))+
     scale_fill_manual(values=sample_palette)+
     ylab('Number of peaks')+ xlab('Peak size')+
     theme_classic()+
@@ -42,4 +38,4 @@ ggplot(peaks,aes(x=rounded_width,fill=sample))+
         )
 dev.off()
 
-cat('Done, plot can be found at:' , output_plot, '\n')
+cat('Done \n')

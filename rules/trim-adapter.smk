@@ -1,10 +1,11 @@
-rule trimmomatic:
+priority = 1
+rule trim_adapter:
 	input:
-		r1 = fastqdir + "{sample}_R1_001.fastq.gz", 
-		r2 = fastqdir + "{sample}_R2_001.fastq.gz", 
+		r1 = inputdir + "{sample}_R1_001.fastq.gz", 
+		r2 = inputdir + "{sample}_R2_001.fastq.gz", 
 	output:
 		r1 = outdir + rulename_trim + "{sample}-1-trimmed.fastq.gz",
-		r2= outdir + rulename_trim + "{sample}-2-trimmed.fastq.gz",
+		r2 = outdir + rulename_trim + "{sample}-2-trimmed.fastq.gz",
 		# reads where trimming entirely removed the mate
 		r1_unpaired= outdir + rulename_trim + "{sample}-1-unpaired.fastq.gz",
 		r2_unpaired= outdir + rulename_trim + "{sample}-2-unpaired.fastq.gz"
@@ -12,6 +13,12 @@ rule trimmomatic:
 		adapters = adapters
 	log:
 		logs + rulename_trim + "{sample}.log"
+	priority:
+		1
+	group:
+		main
+	priority:
+		priority
 	shell:
 		"""
 		trimmomatic  PE -phred33 \

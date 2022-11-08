@@ -1,5 +1,3 @@
-#!/usr/bin/env Rscript
-
 ## script used to calculate the TSS enrichment. Use tn5-shifted-sorted.bam files
 library(dplyr)
 library(data.table)
@@ -13,18 +11,14 @@ source('./utils/r-utils.R')
 encode_ideal = 7
 encode_acceptable = 5
 
-args <- commandArgs(trailingOnly=TRUE) 
-
-input_dir = args[[1]]
-output_plot = args[[2]]
+input_file = unlist(snakemake@input[[1]])
+output_plot = unlist(snakemake@output[[1]])
 
 pattern = paste(paste(samples,"-tn5-shifted-sorted.bam$",sep=''),collapse="|")
-
-cat('Reading all', pattern, 'bam files located in the', input_dir, ' directory\n')
+bams <- list.files(dirname(input_file),recursive=F,full.names=T,pattern=pattern)
 
 ## read aligned tn5-shifted bams
 param <- csaw::readParam(pe = "both",restrict=standard_chr,max.frag=1000)
-bams <-  list.files(bam_dir, recursive = T,full.names = T,pattern=pattern)
 alignment <- lapply(bams, function(x)GenomicAlignments::readGAlignments(x))
 
 txs <- transcripts
@@ -59,7 +53,7 @@ ggplot(tss_enrichment,aes(x=range,y=tsse_enrichment,col=sample))+
         )
 dev.off()
 
-cat('Done, plot can be found at:' , output_plot, '\n')
+cat('Done \n')
 
 
 

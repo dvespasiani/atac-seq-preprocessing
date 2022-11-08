@@ -4,20 +4,17 @@ library(data.table)
 library(magrittr)
 library(ggplot2)
 library(ggpubr)
+library(gridExtra)
 
-
-encode_acceptable = 0.2
-encode_ideal = 0.3
 source('./utils/r-utils.R')
 
-args <- commandArgs(trailingOnly=TRUE) 
+encode_acceptable = 0.8
+encode_ideal = 0.95
 
-input_dir = args[[1]]
-output_plot = args[[2]]
-
-files <- list.files(input_dir,full.names=T,recursive=F)
-
-cat("Parsing all these files:", paste(basename(files),collapse=' , '), " located in the ", input_dir, " directory \n")
+input_file = unlist(snakemake@input[[1]])
+output_plot = unlist(snakemake@output[[1]])
+pattern = paste(paste(samples,'.log',sep=''),collapse='|')
+files <- list.files(dirname(input_file),recursive=F,full.names=T,pattern=pattern)
 
 qc_results <- lapply(files,function(x) {
     x <- fread(x,sep='\t',col.names='bowtie_output')[
@@ -39,19 +36,29 @@ qc_results <- Map(mutate,qc_results,sample=samples)%>%rbindlist()
 
 cat('Plotting the Bowtie2 alignment summary results \n')
 
+plot_align <- function(results,ylabel){
+    p <- ggplot(results,aes(x=sample,y=fraction_reads,fill=sample))+ 
+        geom_bar(stat="identity")+xlab('')+ylab(ylabel)+
+        ylim(0,1)+
+        scale_fill_manual(values=sample_palette)+
+        theme_classic()+
+        theme(
+            legend.position='none',
+            axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)
+            )
+    return(p)
+}
+
+plot_alignment_rate <- plot_align(
+    qc_results[class %in% 'alignment_rate'],'Bowtie2 alignment rate')+ 
+    geom_hline(yintercept=encode_acceptable)+
+    geom_hline(yintercept=encode_ideal,linetype="dashed")+
+    geom_text(aes(1.5,encode_acceptable,label = 'acceptable', vjust = -1))+
+    geom_text(aes(1.5,encode_ideal,label = 'ideal', vjust = -1))
+
+plot_mappable_rate <- plot_align(qc_results[class %in% 'uniquely_mappable'],'Uniquely mappable rate')
+
 pdf(output_plot,width=7,height=7)
-ggplot(qc_results,aes(x=sample,y=fraction_reads,fill=sample))+ 
-geom_bar(stat="identity")+xlab('')+ylab('Bowtie2 Alignment rate')+
-geom_hline(yintercept=encode_acceptable)+
-scale_fill_manual(values=sample_palette)+
-geom_text(aes(1.5,encode_acceptable,label = 'acceptable', vjust = -1))+
-geom_text(aes(1.5,encode_ideal,label = 'ideal', vjust = -1))+
-geom_hline(yintercept=encode_ideal,linetype="dashed")+
-theme_classic()+
-theme(
-    legend.position='none',
-    axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)
-    )
+grid.arrange(plot_alignment_rate, plot_mappable_rate, nrow =2)
 dev.off()
 
-cat('Done, plot can be found at:' , output_plot, '\n')

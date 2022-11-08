@@ -1,0 +1,30 @@
+##==========================##
+## cluster config arguments ##
+##==========================##
+snakefile: snakefile-preprocess.smk
+cluster:
+  sbatch
+    --cpus-per-task={threads}
+    --partition={resources.partition}
+    --mem={resources.mem_mb}
+    --time={resources.time}
+    --job-name={rule}
+    --output=slurm-report/{rule}_{jobid}.out
+    --error=slurm-report/{rule}_{jobid}.err
+    --parsable
+default-resources:
+  - mem_mb=2000
+  - time=480
+  - partition=regular
+jobs: 100
+latency-wait: 60
+cores: 8
+restart-times: 1
+max-jobs-per-second: 1
+keep-going: True
+rerun-incomplete: True
+printshellcmds: True
+show-failed-logs: True
+reason: True
+cluster-status: slurm-status.py
+max-status-checks-per-second: 10

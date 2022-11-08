@@ -5,8 +5,8 @@
 ## c) fingerprint
 ## d) BAM coverage
 ##=========================================
-dedup_bam = outdir + "post-alignment/{sample}-nochrM-encodefiltered-fixmate-rmorphanread-nodup.bam"
-index_bam = outdir + "post-alignment/{sample}-nochrM-encodefiltered-fixmate-rmorphanread-nodup.bai"
+dedup_bam = outdir + "alignment/{sample}-nochrM-encodefiltered-fixmate-rmorphanread-nodup.bam"
+index_bam = outdir + "alignment/{sample}-nochrM-encodefiltered-fixmate-rmorphanread-nodup.bai"
 
 ## First remove blacklisted regions and index resulting bam
 rule deeptools_noblacklist:

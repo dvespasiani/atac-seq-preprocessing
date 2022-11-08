@@ -1,63 +1,39 @@
-#!/usr/bin/env bash
+input=$(realpath $1)
+output=$(realpath $2)
 
-## use this script to create a spreadsheet with: 1) filename and 2) number of peaks/reads
-
-helpFunction()
-{
-   echo ""
-   echo "Usage: $0 -i input_dir -o out_file"
-   echo -e "\t-i Directory where the bams/narrowPeak files are stored"
-   echo -e "\t-o path + name of output file"
-   exit 1 # Exit script after printing help
-}
-
-while getopts "i:o:" flag; do
-    case "${flag}" in
-        i) 
-            input_dir="$OPTARG"
-            ;;
-        o) 
-            outfile="$OPTARG"
-            ;;
-        ?) 
-            helpFunction 
-            ;; 
-    esac
-done
-shift $((OPTIND -1))
-
+echo "input file" "$input"
 echo
-echo
-echo "Getting filenames and counts for the files located in the $input_dir "
-echo
+input_dir=$(echo "${input%/*}/")
+echo "input dir" "$input_dir"
 echo
 
-for f in ${input_dir}/* ; do
+fname="$(echo $(basename $input | cut -f 1 -d '.') )"
+"$fname"  > "$output"
 
-    if [[ "$f" == *.bam ]] || [[ "$f" == *narrowPeak.gz ]] ; then
-        fname="$(echo $(basename $f | cut -f 1 -d '.') )"
-        printf '%s\n' "$fname"  >> names.out
-    fi
+# for f in "$input_dir"* ; do
+#     fname="$(echo $(basename $f | cut -f 1 -d '.') )"
+#     printf '%s\n' "$fname"  > $output
+# done
+    # if [[ "$f" == *.bam ]] || [[ "$f" == *narrowPeak.gz ]] ; then
+    #     fname="$(echo $(basename $f | cut -f 1 -d '.') )"
+    #     printf '%s\n' "$fname"  >> names.out
+    # fi
         if [[ "$f" == *.bam ]] ; then
-        samtools view "$f" | wc -l >> counts.out 
+        counts=$(samtools view "$f" | wc -l)
         
         elif [[ "$f" == *narrowPeak.gz ]]; then
-            gunzip -nc "$f" | wc -l >> counts.out
+            counts=$(gunzip -nc "$f" | wc -l)
         fi
+    entry=$(paste -d "\t" $fname $counts)
 done
 
-echo
-echo
-echo "Combining all tmp files and creating the final output file"
-echo
+echo "entries"
+echo $entry
 echo
 
-paste -d "\t" names.out counts.out > tmp.txt
-echo -e "file\tcounts" | cat - tmp.txt > $outfile
+printf '%s\n' "$entry"  > $output
 
-rm names.out && rm counts.out  && rm tmp.txt 
 
-echo 
-echo "Done, the output file is this one here $outfile"
-echo
-echo
+
+# rm names.out && rm counts.out  && rm tmp.txt 
+

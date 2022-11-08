@@ -1,90 +1,100 @@
+priority = 0 
 rule count_bam_reads:
     input:
-        outdir + rulename_postalign
+        outdir + rulename_align + "all_samples-tn5-shifted-sorted.bam",
     output:
-        tables + 'number-reads-bam-files.txt'
+        tables + rulename_qc + 'number-reads-bam-files.txt'
     log:
-        logs + rulename_postalign + "numb-reads-bams.log"
+        logs + rulename_align + "numb-reads-bams.log"
     group:
         qc
-    shell:
-        "./bin/get-counts.sh -i {input} -o {output}"
-
-
+    priority:
+        priority
+    script:
+        "../bin/get-counts.py"
+        
 rule count_peaks:
     input:
-        outdir + rulename_peak
+        outdir + rulename_peak + "all_samples-macs2-peaks-filtered-sorted.narrowPeak.gz"
     output:
-        tables + 'number-peaks.txt'
+        tables + rulename_qc + 'number-peaks.txt'
     log:
         logs + rulename_peak + "number-peaks.log"
     group:
         qc
-    shell:
-        "./bin/get-counts.sh -i {input} -o {output}"
-
-
+    priority:
+        priority
+    script:
+        "../bin/get-counts.py"
+        
 rule alignment_summary:
     input:
-        logs + rulename_align
+        logs + rulename_align + "all_samples-tn5-shifted-sorted-index.log"
     output:
-        plots + 'bowtie2-alignment-qc.pdf'
+        plots + rulename_qc + "bowtie2-alignment-summary.pdf"
     log:
         logs + rulename_align + "alignment-summary.log"
     group:
         qc
-    shell:
-        "Rscript ./bin/plot-alignment-summary.R {input} {output}"
-
+    priority:
+        priority
+    script:
+        "../bin/plot-alignment-summary.R"
 
 rule estim_lib_complex:
     input:
-        outdir + rulename_postalign
+        outdir + rulename_align + "all_samples-tn5-shifted-sorted.bam"
     output:
-        tables + 'library-complexity.txt'
+        tables + rulename_qc + 'library-complexity.txt'
     log:
-        logs + rulename_postalign + "library-complexity.log"
+        logs + rulename_align + "library-complexity.log"
     group:
         qc
-    shell:
-        "./bin/estimate-lib-complexity.sh -i {input} -o {output}"
+    priority:
+        priority
+    script:
+        "../bin/estimate-lib-complexity.py"
 
 rule frip_summary:
     input:
-        qcdir
+        qcdir + "all_samples-frip.txt"
     output:
-        plots + 'frip-summary-qc.pdf'
+        plots + rulename_qc + 'frip-summary-qc.pdf'
     log:
         logs + rulename_peak + "frip-summary-qc.log"
     group:
         qc
-    shell:
-        "Rscript ./bin/plot-frip-summary.R {input} {output}"
+    priority:
+        priority
+    script:
+        "../bin/plot-frip-summary.R"
         
-
 rule peak_qc:
     input:
-        outdir + rulename_peak
+        outdir + rulename_peak + "all_samples-macs2-peaks-filtered-sorted.narrowPeak.gz"
     output:
-        plots + 'extra-peak-qcs.pdf'
+        plots + rulename_qc + 'extra-peak-qcs.pdf'
     log:
         logs + rulename_peak + "extra-peak-qcs.log"
     group:
         qc
-    shell:
-        "Rscript ./bin/plot-peak-qcs.R {input} {output}"
+    priority:
+        priority
+    script:
+        "../bin/plot-peak-qcs.R"
         
-
 rule tss_enrich:
     input:
-        outdir + rulename_postalign
+        outdir + rulename_align + "all_samples-tn5-shifted-sorted.bam"
     output:
-        plots + 'tss-enrichment.pdf'
+        plots + rulename_qc + 'tss-enrichment.pdf'
     log:
         logs + rulename_peak + "tss-enrichment.log"
     group:
         qc
-    shell:
-        "Rscript ./bin/plot-tss-enrich.R {input} {output}"
+    priority:
+        priority
+    script:
+        "../bin/plot-tss-enrich.R"
         
 

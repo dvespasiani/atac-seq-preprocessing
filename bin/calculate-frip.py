@@ -8,7 +8,6 @@
 
 import sys
 import os
-sys.path.append('/home/users/allstaff/vespasiani.d/.local/lib/python3.6/site-packages')
 from pybedtools import BedTool
 
 # bed file (converted from aligned BAM file to bed)

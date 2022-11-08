@@ -1,7 +1,21 @@
-##----------------------------------------
-## Project I/O dirs
-##----------------------------------------
-baseDir:  /stornext/General/data/user_managed/grpu_jchoi_0/projects/davide/
-project: atac-pipeline
-modules: /stornext/General/data/user_managed/grpu_jchoi_0/projects/davide/atac-pipeline/config/modules.txt
-tmp_dir: /vast/scratch/users/vespasiani.d/tmp
+##==========================##
+##     Project I/O dirs     ##
+##==========================##
+project_config: {
+    baseDir:  /stornext/General/data/user_managed/grpu_jchoi_0/projects/davide/,
+    project: atac-pipeline,
+    tmp_dir: /vast/scratch/users/vespasiani.d/tmp
+}
+
+##=============================##
+## Parameters interactive sess ##  
+##=============================##
+interactive_sess: {
+    ntasks: 1,
+    threads: 1,
+    cpus_per_task: 1,
+    mem: 280G,
+    time: 480,
+    partition: regular,
+    modules: config/modules.txt
+}

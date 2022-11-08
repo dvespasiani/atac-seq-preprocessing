@@ -5,6 +5,7 @@
   - [Running the pipeline](#running-the-pipeline)
     - [Interactively](#interactively)
     - [In the background](#in-the-background)
+  - [Then, just like before, you should get all your results in the `out/` directory and log files in the `logs/` directory. <br/>](#then-just-like-before-you-should-get-all-your-results-in-the-out-directory-and-log-files-in-the-logs-directory-)
   - [Pipeline overview](#pipeline-overview)
     - [FastQC](#fastqc)
     - [Adaptor trimming](#adaptor-trimming)
@@ -25,16 +26,17 @@
 ----
 ## Project description
 This repo contains a snakemake pipeline to preprocess fastq files generated from bulk ATAC-seq experiments. Preprocessing steps mainly come from the [ENCODE ATAC-seq processing standards](https://www.encodeproject.org/atac-seq/). For full protocol specifications [check this google doc](https://docs.google.com/document/d/1f0Cm4vRyDQDu0bMehHD7P7KOMxTOP-HiNoIvL1VcBt8/edit). I have noticed they have changed it since last time (mainly polished it), so keep an eye on this. In addition to what reported by the ENCODE, I have also included some extra scripts to perfom and visualise quality control metrics.
+
 ## Project set up
 To set up this pipeline you need to:
-1. **FIRST AND FOREMOST** = have your tmp directory within the vast/scratch filesystem (if you dont have permissions there, contact IT)
+* **FIRST AND FOREMOST** = have your tmp directory within the vast/scratch filesystem (if you dont have permissions there, contact IT)
 If you do already have one then be sure the path it's in your `~/.bash_profile` and if not then save this line in there:
 ```
 export TMPDIR=/vast/scratch/users/<your-username>/tmp
 ```
 This is fundamental to have, if not for managing files and resourses in the cluster, simply because some commands of this pipeline will fail as they will fill up your base disk quota in no time. Anyhow, once you have it, modify the corresponding entry within the `snakemake-config.yaml` file (see right below here).
 
-1. Modify the entries in the `config/snakemake-config.yaml` file to your needs, such as:
+* Change the entries in the `config/snakemake-config.yaml` file to suit your needs, such as:
 ```
 species: your-species
 genome: your-species-genome
@@ -42,25 +44,25 @@ samples:
     - your-sample1
     - your-sample2
 basedir: your-basedir
-fastqdir: your-fastqdir-containing-fastq-files
+fastqdir: your-dir-containing-fastq-files
 etc....
 
 ```
-Note that I am using full paths for most directives in the config yaml file. You could make them relative to a base directory to avoid repetition but you'll need to modify few entries in the main `snakemake-preprocess.smk` file
+Note that I am using full paths for most directives in the config yaml file. You could make them relative to a base directory to avoid repetition but you'll need to combine them in the main `snakemake-preprocess.smk` file.
 
-2. Make sure you have all the information for your species, such as:
-   * a chrom.sizes file containing the chromosome sizes. This can be obtained either from UCSC (the link should be something like `http://hgdownload.soe.ucsc.edu/goldenPath/<your-species-assembly>/bigZips/<your-species-assembly>.chrom.sizes`) or, alternatively, by running
+* Make sure you have all the information for your species, such as:
+   - a chrom.sizes file containing the chromosome sizes. This can be obtained either from UCSC (the link should be something like `http://hgdownload.soe.ucsc.edu/goldenPath/<your-species-assembly>/bigZips/<your-species-assembly>.chrom.sizes`) or, alternatively, by running
 ```
  samtools faidx <your-species-assembly>.fa
  cut -f 1,2 <your-species-assembly>.fa.fai > <your-species-assembly>.chrom.sizes
  ``` 
-   * the effective genome size for your species of interest which is based on the length of your sequencing reads. Again, you can find this info either [at this website](https://deeptools.readthedocs.io/en/develop/content/feature/effectiveGenomeSize.html) or, alternatively, by running
+   - the effective genome size for your species of interest which is based on the length of your sequencing reads. Again, you can find this either [at this website](https://deeptools.readthedocs.io/en/develop/content/feature/effectiveGenomeSize.html) or, alternatively, by running:
 ```
  python ./bin/unique-kmers.py -k <your-read-length> <path/to/genome/fasta/file.fa>
 ``` 
 This script will return you the total estimated number of k-mers found in your species genome assembly. If you need further info on this script look at [MR Crusoe *et al.*, 2015](http://dx.doi.org/10.12688/f1000research.6924.1). <br/>
 
-   * A directory containing a Bowtie2 indexed genome. For this you can either run:
+   - A directory containing a Bowtie2 indexed genome. For this you can either run:
 ```
 module load bowtie2/2.4.4
 bowtie2-build <your-species-genome>.fa <index-prefix-name>
@@ -73,11 +75,21 @@ wget  http://hgdownload.cse.ucsc.edu/goldenpath/<your-species-assembly>/bigZips/
 ```
 and specify this path in relative directives within the `config/snakemake-config.yaml` file.
 
-3. Make sure you have all the softwares installed in your R/python envs:
-   * The `pybedtools` python module. For the moment I have installed it in my own `PYTHONPATH` dir (which is also specified in my `~/.bash_profile`) and I have specified this path in the `./bin/calculate-frip.py` script using the sys module in python. **However, this is not ideal**, but for the moment it works. I need to change it.
-   * R libraries such as `yaml`, `data.table`, `GenomicAlignments`, `ATACseqQC`, `csaw`, `GenomicFeatures`, `TxDb.<your-species>.UCSC.<your-species-assembly>.knownGene`, `UpSetR`. All the other libraries should be pretty standard
+* Create your own python virtual env and install some modules
+As indicated in the [Milton documentation](https://wehieduau.sharepoint.com/sites/rc2/SitePages/Installing-software.aspx?Mode=Edit#installing-software) is best practice to create your python virtual envirnoment where you can `pip install` all your packages. To do so, you need to run the following:
+```
+module load python/<whatever.version>
+virtualenv myvenv
+. myvenv/bin/activate
+```
+Afterwards you can install all your python modules. Here I am assuming you have already created a virtual env called `mypyenv`. If not simply run `virtualenv myvenv`. When running this pipeline either interactively or via `sbatch` ([see below]((#running-the-pipeline))), a line in the `config/module.txt` will activate your `mypyenv` python virtual enviroment. If you already have created one yourself then just change this line to whatever your virtual environment is called. <br/>
 
-4. Once you know how many samples you are preprocessing, replace the following lines within the `utils/r-utils.R`:
+Regarding the python modules I am using in this pipeline, make sure to have installed in your virtual environment these modules: `pybedtools`, `argparse`, `pandas` and `subprocess` before running this pipeline.
+
+* Install all required R libraries such as `yaml`, `data.table`, `GenomicAlignments`, `ATACseqQC`, `csaw`, `GenomicFeatures`, `TxDb.<your-species>.UCSC.<your-species-assembly>.knownGene`, `UpSetR`. 
+All the other libraries I am using here should be pretty standard.
+
+* Once you know how many samples you are preprocessing, replace the following lines within the `utils/r-utils.R`:
 ```
 qualitative_palette = brewer.pal.info[brewer.pal.info$category == 'qual',]
 sample_palette = sample(unlist(mapply(brewer.pal, qualitative_palette$maxcolors, rownames(qualitative_palette))),length(samples))
@@ -85,36 +97,47 @@ names(sample_palette) = samples
 ```
 with something like:
 ```
-sample_palette =  c('your','palette')
+sample_palette =  c('one','palette','per','sample')
 ```
+in order to define a color scheme for your samples.
 
 ## Running the pipeline
-
+Read here to understand how to run this pipeline either interactively or using  `sbatch`.
 ### Interactively
-To test this pipeline on a subset of your fastq files to see if everything runs smoothly and all the desired results are produced, you need to run:
+I suggest running interactive sessions to test/develop this pipeline using a subset of your fastq files to see whether everything runs smoothly and whether all desired results are produced. To do so, you then need to run:
 
 ```
 utils/subsample-files.sh -i <indir> -o <outdir> -n <numbreads>
+e.g., ./utils/subsample-files.sh -i /wehisan/general/user_managed/grpu_jchoi_0/received/AnneMarie/annemarie_250822  \
+-o /wehisan/general/user_managed/grpu_jchoi_0/projects/davide/atac-pipeline/data/subsampled-files/ \
+-n 1000
 ```
+This script will extract the first `n = number of reads` from all the files listed in the `i = input dir`. You can then run the entire pipeline interactively on this subset of reads. However, if you do so, remember to correctly specify the location of your subsampled fastq files in the `config/snakemake-config.yaml` file, which is defined in the `fastqdir` directive. <br/>
 
-This script will extract the first `n = number of reads` from all the files listed in the `i = input dir`. You can then run the entire pipeline interactively on this subset of reads. However, if you do so, remember to correctly specify the location of your subsampled fastq files in the `config/snakemake-config.yaml` file (hint: it's the `fastqdir` directive).
-Next, set up an interactive session on SLURM. I personally do it using my custom made script. In this case then move the `runInteractively.sh` script outside this project directory and set up your interactive session as:
+Next, set up an interactive session on SLURM. I personally do it using my custom made script `run-interactively.sh`. This script reads all `salloc` arguments (e.g., mem/time etc..) specied in the `config/cluster_config.yaml` file (you can changed them to whatever you might need) and requests those resources without you having to write the entire `salloc` command each time. If you also want to use this utility then move the script outside the project directory and set up your interactive session as:
 
 ```
-chmod +x runInteractively.sh # it should already be executable though
-./runInteractively.sh -p <your-project-name> # to change slurm salloc arguments (e.g., mem/time etc..) go to config/cluster_config.yaml
+chmod +x run-interactively.sh # it should already be executable though
+./run-interactively.sh -p <your-project-name> 
 eval "$(cat "$modules")"  # this loads all the modules listed in the config/modules.txt file
 ```
-Now you should have all the resources allocated and modules loaded in your own interactive environment. To then run the snakemake pipeline simply type:
-```
-snakemake --cores 8 -s snakefile-preprocess.smk
-```
-and once its finished, if it doesnt crash, you should get your results. <br/>
+Now you should have all the resources allocated and modules loaded in your own interactive environment. <br/>
 
-**PS:** Using the subsampled test files the pipeline is pretty quick in finishing. Only the set of rules using deepTools do take quite a bit to complete. This means that with the full fastq files this will likely take a while to finish. However, because 1) the pipeline is modular and 2) I defined a main and a qc group of analyses, you will be able to still investigate your peaks of chromatin accessibility while deepTools are still running in the background.
+To then run the snakemake pipeline interactively simply type:
+```
+snakemake --cores 9 -s snakefile-preprocess.smk
+```
+and once its finished, if it doesnt crash, you should get all your results in the `out/` directory and log files in the `logs/` directory. <br/>
+
+**PS:** Using the subsampled test files the pipeline is pretty quick in finishing. Only the set of rules using deepTools do take quite a bit to complete. This means that with the full fastq files this will likely take a while to finish. However, because 1) the pipeline is modular and 2) I defined a main and a qc group of analyses with different priorities, you will be able to still investigate your peaks of chromatin accessibility while deepTools are still running in the background.
 
 ### In the background
-
+To run the pipeline on the background run the following lines:
+```
+mkdir slurm-report 
+sbatch utils/run-on-cluster.sh
+```
+Then, just like before, you should get all your results in the `out/` directory and log files in the `logs/` directory. <br/>
 ----
 ## Pipeline overview
 The pipeline contained in this repo goes through the following steps:
