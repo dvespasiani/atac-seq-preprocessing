@@ -114,12 +114,14 @@ Next, set up an interactive session on SLURM. I personally do it using my custom
 chmod +x run-interactively.sh # it should already be executable though
 ./run-interactively.sh -p <your-project-name> 
 eval "$(cat "$modules")"  # this loads all the modules listed in the config/modules.txt file
+
 ```
 Now you should have all the resources allocated and modules loaded in your own interactive environment. <br/>
 
 To then run the snakemake pipeline interactively simply type:
 ```
 snakemake --cores 9 -s snakefile-preprocess.smk
+
 ```
 and once its finished, if it doesnt crash, you should get all your results in the `out/` directory and log files in the `logs/` directory. <br/>
 
@@ -127,6 +129,7 @@ and once its finished, if it doesnt crash, you should get all your results in th
 
 ### In the background
 To run the pipeline on the background run the following lines:
+
 ```
 mkdir slurm-report 
 sbatch utils/run-on-cluster.sh
