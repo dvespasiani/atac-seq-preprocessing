@@ -1,11 +1,11 @@
 priority = 0 
 rule count_bam_reads:
     input:
-        outdir + rulename_align + "all_samples-tn5-shifted-sorted.bam",
+        outdir + rulename_alignment + "all_samples-tn5-shifted-sorted.bam",
     output:
         tables + rulename_qc + 'number-reads-bam-files.txt'
     log:
-        logs + rulename_align + "numb-reads-bams.log"
+        logs + rulename_alignment + "numb-reads-bams.log"
     group:
         qc
     priority:
@@ -29,11 +29,11 @@ rule count_peaks:
         
 rule alignment_summary:
     input:
-        logs + rulename_align + "all_samples-tn5-shifted-sorted-index.log"
+        logs + rulename_alignment + "all_samples-tn5-shifted-sorted-index.log"
     output:
         plots + rulename_qc + "bowtie2-alignment-summary.pdf"
     log:
-        logs + rulename_align + "alignment-summary.log"
+        logs + rulename_alignment + "alignment-summary.log"
     group:
         qc
     priority:
@@ -43,11 +43,11 @@ rule alignment_summary:
 
 rule estim_lib_complex:
     input:
-        outdir + rulename_align + "all_samples-tn5-shifted-sorted.bam"
+        outdir + rulename_alignment + "all_samples-tn5-shifted-sorted.bam"
     output:
         tables + rulename_qc + 'library-complexity.txt'
     log:
-        logs + rulename_align + "library-complexity.log"
+        logs + rulename_alignment + "library-complexity.log"
     group:
         qc
     priority:
@@ -85,7 +85,7 @@ rule peak_qc:
         
 rule tss_enrich:
     input:
-        outdir + rulename_align + "all_samples-tn5-shifted-sorted.bam"
+        outdir + rulename_alignment + "all_samples-tn5-shifted-sorted.bam"
     output:
         plots + rulename_qc + 'tss-enrichment.pdf'
     log:

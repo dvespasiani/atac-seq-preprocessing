@@ -61,7 +61,7 @@ include: "rules/fastqc.smk"
 include: "rules/trim-adapter.smk"
 include: "rules/alignment.smk"
 include: "rules/peak-calling.smk"
-# include: "rules/deeptools.smk"
+include: "rules/deeptools.smk"
 include: "rules/qcs.smk"
 include: "rules/consensus-peak.smk"
 
@@ -114,20 +114,20 @@ rule all:
             expand(qcdir + "{combined_sample}-frip.txt",combined_sample=combined_sample),
 
             
-            # ## deeptools
-            # # expand(outdir + rulename_deeptools + "{sample}-noblacklist.bam",sample=sample),
-            # # expand(outdir + rulename_deeptools + "{sample}-noblacklist.bai",sample=sample),
-            # # expand(outdir + rulename_deeptools + "{sample}-SeqDepthNorm.bw",sample=sample),
-            # # outdir  + rulename_deeptools + "samples-bam-coverage.png",
-            # # outdir + rulename_deeptools + "samples-plot-fingerprint.png",
-            # # outdir + rulename_deeptools + "multiBAM-fingerprint-metrics.txt",
-            # # outdir + rulename_deeptools + "multiBAM-fingerprint-rawcounts.txt",
-            # # expand(outdir + rulename_deeptools + "{sample}-GC-content.txt",sample=sample),
-            # # expand(outdir + rulename_deeptools + "{sample}-plot-GC-content.png",sample=sample),
-            # # outdir + rulename_deeptools + "multibam-summary.npz",
-            # # outdir + rulename_deeptools + "multibam-readcounts.txt",
-            # # outdir + rulename_deeptools + "pearson-corr-multibam.png",
-            # # outdir + rulename_deeptools + "pearson-corr-multibamsum-matrix.txt",
+            # deeptools
+            expand(outdir + rulename_deeptools + "{sample}-noblacklist.bam",sample=sample),
+            expand(outdir + rulename_deeptools + "{sample}-noblacklist.bai",sample=sample),
+            expand(outdir + rulename_deeptools + "{sample}-SeqDepthNorm.bw",sample=sample),
+            outdir  + rulename_deeptools + "samples-bam-coverage.png",
+            outdir + rulename_deeptools + "samples-plot-fingerprint.png",
+            outdir + rulename_deeptools + "multiBAM-fingerprint-metrics.txt",
+            outdir + rulename_deeptools + "multiBAM-fingerprint-rawcounts.txt",
+            expand(outdir + rulename_deeptools + "{sample}-GC-content.txt",sample=sample),
+            expand(outdir + rulename_deeptools + "{sample}-plot-GC-content.png",sample=sample),
+            outdir + rulename_deeptools + "multibam-summary.npz",
+            outdir + rulename_deeptools + "multibam-readcounts.txt",
+            outdir + rulename_deeptools + "pearson-corr-multibam.png",
+            outdir + rulename_deeptools + "pearson-corr-multibamsum-matrix.txt",
 
             # ## qcs
             tables + rulename_qc + 'number-reads-bam-files.txt',
