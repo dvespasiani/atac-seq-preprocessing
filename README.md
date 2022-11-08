@@ -12,15 +12,9 @@
     - [Genome alignment](#genome-alignment)
     - [Peak calling](#peak-calling)
   - [Quality controls](#quality-controls)
-    - [Get peak and read counts](#get-peak-and-read-counts)
-    - [Estimate library complexity](#estimate-library-complexity)
-    - [Get summary alignment results](#get-summary-alignment-results)
-    - [Peak general QCs](#peak-general-qcs)
-    - [Fraction Reads in Peaks (FRiP)](#fraction-reads-in-peaks-frip)
-    - [TSS enrichment](#tss-enrichment)
-    - [BAM Summary and Coverage](#bam-summary-and-coverage)
-    - [GC bias](#gc-bias)
-    - [Cumulative enrichment (BAM fingerprint)](#cumulative-enrichment-bam-fingerprint)
+      - [BAM Summary and Coverage](#bam-summary-and-coverage)
+      - [GC bias](#gc-bias)
+      - [Cumulative enrichment (BAM fingerprint)](#cumulative-enrichment-bam-fingerprint)
  
 
 ----
@@ -161,51 +155,25 @@ I am using Bowtie2 to align reads to the genome assembly of the species of inter
 ### Peak calling
 To call peaks of chromatin accessiblity I am using MACS2 on Tn5-shifted BAM files. MACS2 parameters are defined as per ENCODE.
 ## Quality controls
-Here I am listing all the QCs that are generated with this pipeline. Some of them are part of the snakemake pipeline and so you dont need to run extra scripts, while others are based oin custom scripts and can be run after the preprocessing steps are completed. automatically run for you plus some others you can perform on top of these. All the QCs I am generating extra are, by default, located in the `out/preprocessing/plot/atac-seq-qc` directory. You can change this if you want to. <br/>
+Here I am listing all the QCs that are generated with this pipeline. 
+QCs:
+* Bowtie2 alignment summary results (e.g., % mapped and uniquely mapped reads)
+* Number of reads in each bam file
+* Library complexity estimate (a table containing different metrics including PBC1/PBC2 and NRF)
+* Number of peaks (following removal of those overlapping blacklisted regions)
+* Extra peak QCs (e.g. plot number of peaks by size per sample)
+* Fraction Reads in Peaks (FRiP)
+* Enrichment of peaks around transcription start sites (TSS)
 
-To perform the extra QC steps, you can either run the executable scripts contained in the `bin/` directory independently (see below), or you can just run the `utils/get-qcs.py` script. This script is a wrapper which simply calls each of the other executables using the default paths that are parsed from the config yaml files.
-
-### Get peak and read counts
-Use `./bin/get-counts.sh -i <input_dir> -o <out_file>`  to obtain number of reads/peaks for each `*.bam$` and `*narrowPeak` file within the respective `out/preprocessing/` directories.
-### Estimate library complexity
-To get metrics such as PBC1/PBC2 and NRF ([see here](https://www.encodeproject.org/data-standards/terms/#library)) run:
-```
-./bin/estimate-lib-complexity.sh -i <input_dir> -o <out_dir>
-```
-This will create a tab-separated `library-complexity.txt` file in your specified output dir with all those information.
-### Get summary alignment results
-To plot the Bowtie2 alignment results (i.e., the % of reads aligned) for each sample, run:
-```
-Rscript ./bin/plot-alignment-summary.R -i path/to/logs/alignment/dir/
-```
-**NB:** The files you should access to, by default, are located in the `logs/alignment` directory as per snakemake.
-
-### Peak general QCs
-To plot some other general QCs for your set of peaks run:
-```
-Rscript ./bin/plot-peak-qcs.R 
-```
-At the moment this script will only return you a plot with the distribution of peak sizes for your set of peaks. If I will think/come across with other QCs I will incorporate them in here.
-### Fraction Reads in Peaks (FRiP)
-It represents the proportion of all mapped reads that fall into the called peak regions. FRiP scores positively correlates with the number of regions. According to ENCODE: "*FRiP should be >0.3, though values greater than 0.2 are acceptable*". <br/>
-FRiP calculation is already included in the snakemake pipeline, see `rule_frip` in `rules/peak-calling.smk`. However, to generate a barchart with the FRiP scores for each of your samples run:
-```
-Rscript ./bin/plot-frip-summary.R -i path/to/input/dir/with/frip/result/
-```
-### TSS enrichment
-To calculate and plot the TSS enrichment run:
-```
-Rscript ./bin/plot-tss-enrich.R
-```
-### BAM Summary and Coverage
+In addition to these, I am using the [deepTools suite of commands](https://deeptools.readthedocs.io/en/develop/) to further explore the ATAC-seq data and generating other QCs. Here below you can read about some of the results you would get.
+#### BAM Summary and Coverage
 Both of these QCs are obtained by running deepTools programs. Bam coverage is calculated as the number of reads over short consecutive counting windows of defined size. The snakemake pipeline will run deepTools `bamCoverage` and `plotCoverage` programs to respectively calculate and plot the coverage for each sample. The plotting command will return 2 plots indicating:
 1. The frequencies of the observed read coverages per sample
 2. The fraction of the genome covered by >= a given number of reads 
 To calculate and plot the correlation between read coverages across samples I am using `multiBamSummary` and `plotCorrelation`, respectively. The first program computes the read coverages over the entire genome and/or specific genomic regions for >=2 BAM files, whereas the second one plots a heatmap with the resulting Peason correlation values.
-### GC bias
+#### GC bias
 This QC step is performed to test the assumption of an expected uniform distribution of sequenced reads across the genome, regardless of their base-pair composition. This assumption can fail during library prep, when PCR enriches for GC-rich fragments. Here I am using the deepTools command `computeGCbias` to first calculate the expected GC profile for the genome of the species of interest, as the distribution of GC-content for DNA fragments of a given size. The program will compare the expectations with the observations, returning a plot for each sample showing the number of reads overlapping genomic regions of increasing GC content and the log2(observed/expected) ratio of reads per GC content region. If there is no GC-bias in your samples then the observed and expected GC profiles would be similar, i.e. ratio of observed/expected GC content per fragment length = 1. If you spot a GC-bias, you could run the `correctGCbias` program, which removes reads from regions of too high-coverage and add reads to regions of low-coverage.
-
-### Cumulative enrichment (BAM fingerprint)
+#### Cumulative enrichment (BAM fingerprint)
 For this QC, I am using the deepTools `plotFingerprint` program. It samples the indexed BAM files and calculates the samples cumulative enrichment by counting all reads overlapping a window (bin) of a given length. The resulting plot is useful to assess how well the signal of the sequenced reads can be differentiated from the background distribution of reads in the control input sample. An ideal input with perfect uniform distribution of reads along the genome (i.e. without enrichments in specific open chromatin regions) and infinite sequencing coverage would generate a straight diagonal line. On the other hand, a strong enrichment in very specific (i.e. fragment size) chromatin regions will result in a prominent and steep rise of the cumulative sum towards the highest rank. This means that a big chunk of reads from the test (ChIP/ATAC) sample is located in few bins which corresponds to high, narrow enrichments typically seen for transcription factors. <br/>
 
 **PS**: check where cumulative curve starts on the plots as this will give you an indication of the percentage of the genome that was not sequenced at all (i.e. bins containing 0 reads). However, such percentage can be quite high, especially for extremely high enrichment which would result in the vast majority of reads occurring within few peaks, [see these examples](https://deeptools.readthedocs.io/en/develop/content/tools/plotFingerprint.html).
