@@ -31,4 +31,4 @@ if [ ! -d 'logs/' ]; then
 fi
 
 
-snakemake --profile ./config/slurm 
+snakemake --profile ./config/snakemake-slurm-config.yaml 

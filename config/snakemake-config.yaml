@@ -44,6 +44,12 @@ genome2bit_index: /wehisan/general/user_managed/grpu_jchoi_0/genomes/Mouse/mm10_
 ##==================##
 ## list here all the sample basenames without the read extension 
 samples: &samples
+       - Ad2_1_S1_L001
+       - Ad2_3_S2_L001
+       - Ad2_4_S3_L001
+       - Ad2_6_S4_L001
+       - Ad2_7_S5_L001
+       - Ad2_9_S6_L001
        - Ad2_10_S7_L001
        - Ad2_11_S8_L001
 

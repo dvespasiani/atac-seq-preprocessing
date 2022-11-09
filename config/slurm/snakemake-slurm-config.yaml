@@ -13,8 +13,8 @@ cluster:
     --error=slurm-report/{rule}_{jobid}.err
     --parsable
 default-resources:
-  - mem_mb=2000
-  - time=480
+  - mem_mb=100000
+  - time=2880
   - partition=regular
 jobs: 100
 latency-wait: 60

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# ./slurm-status.py
 
 import subprocess
 import sys
