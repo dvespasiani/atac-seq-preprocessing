@@ -1,4 +1,3 @@
-priority = 1
 rule consensus_peak:
     input:
         sample_peaks = expand(outdir + rulename_peak + "{sample}-macs2-peaks-filtered-sorted.narrowPeak.gz",sample = sample),
@@ -10,7 +9,5 @@ rule consensus_peak:
         logs + rulename_conspeak + "consensus-peak.log"
     group:
         main
-    priority:
-        priority
     script:
         "../bin/get-consensus-peaks.R"

@@ -2,7 +2,6 @@
 ##  1. Align to reference genome using Bowtie2
 ##  then sort bam file by genomic coordinates
 ## =================================================
-priority = 1
 rule align:
   input:
     r1 = rules.trim_adapter.output.r1,
@@ -15,8 +14,6 @@ rule align:
     logs + rulename_alignment + "{sample}.log"
   group:
     main
-  priority:
-    priority
   shell:
     """
     bowtie2 -q -X 2000 --mm -x {params.index} \
@@ -35,8 +32,6 @@ rule rmChrM:
     outdir +  rulename_alignment + "{sample}-nochrM.bam"
   group:
     main
-  priority:
-    priority
   log:
     logs + rulename_alignment + "{sample}-rmchrM.log"
   shell:
@@ -49,8 +44,6 @@ rule encode_filters:
     outdir +  rulename_alignment + "{sample}-nochrM-encodefiltered.bam"
   group:
     main
-  priority:
-    priority
   params:
     read_minQ = read_minQ
   log:
@@ -65,8 +58,6 @@ rule fixmate:
     outdir +  rulename_alignment + "{sample}-nochrM-encodefiltered-fixmate.bam"
   group:
     main
-  priority:
-    priority
   log:
     logs + rulename_alignment  + "{sample}-fixmate.log"
   shell:
@@ -79,8 +70,6 @@ rule rmOrphanread:
     outdir + rulename_alignment + "{sample}-nochrM-encodefiltered-fixmate-rmorphanread.bam"
   group:
     main
-  priority:
-    priority
   log:
     logs + rulename_alignment + "{sample}-rmOrphanread.log"
   shell:
@@ -99,8 +88,6 @@ rule markDups:
     dupQC = qcdir + rulename_alignment + "{sample}-duplicate-rate.qc"
   group:
     main
-  priority:
-    priority
   params:
    mem = "-Xmx4g"
   log:
@@ -119,8 +106,6 @@ rule dedup:
     outdir + rulename_alignment + "{sample}-nochrM-encodefiltered-fixmate-rmorphanread-nodup.bam"
   group:
     main
-  priority:
-    priority
   log:
     logs + rulename_alignment + "{sample}-dedup.log"
   shell:
@@ -136,8 +121,6 @@ rule indexBam:
     outdir + rulename_alignment + "{sample}-nochrM-encodefiltered-fixmate-rmorphanread-nodup.bai"
   group:
     main
-  priority:
-    priority
   log:
     logs + rulename_alignment + "{sample}-indexBam.log"
   shell:
@@ -152,8 +135,6 @@ rule Tn5_shift:
     outdir + rulename_alignment + "{sample}-tn5-shifted.bam"
   group:
     main
-  priority:
-    priority
   log:
     logs + rulename_alignment + "{sample}-tn5-shifted.log"
   shell:
@@ -170,8 +151,6 @@ rule poolbams:
     logs + rulename_alignment + "{all_samples}-poolbams.log"
   group:
     main
-  priority:
-    priority
   shell:
     "samtools merge {output} {input.samples}"
 
@@ -182,8 +161,6 @@ rule Tn5_shifted_sort:
     outdir + rulename_alignment + "{combined_sample}-tn5-shifted-sorted.bam"
   group:
     main
-  priority:
-    priority
   log:
     logs + rulename_alignment + "{combined_sample}-tn5-shifted-sorted.log"
   shell:
@@ -196,8 +173,6 @@ rule index_Tn5Bams:
     outdir + rulename_alignment + "{combined_sample}-tn5-shifted-sorted.bam.bai"
   group:
     main
-  priority:
-    priority
   log:
     logs + rulename_alignment + "{combined_sample}-tn5-shifted-sorted-index.log"
   shell:

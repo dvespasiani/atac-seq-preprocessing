@@ -4,7 +4,7 @@
 snakefile: snakefile-preprocess.smk
 cluster:
   sbatch
-    --cpus-per-task={threads}
+    --cpus-per-task={resources.threads}
     --partition={resources.partition}
     --mem={resources.mem_mb}
     --time={resources.time}
@@ -13,12 +13,13 @@ cluster:
     --error=slurm-report/{rule}_{jobid}.err
     --parsable
 default-resources:
-  - mem_mb=100000
-  - time=2880
+  - mem_mb=20000
+  - time=500
   - partition=regular
-jobs: 100
+  - threads=1
+jobs: 5
 latency-wait: 60
-cores: 3
+cores: 5
 restart-times: 1
 max-jobs-per-second: 1
 keep-going: True
@@ -28,3 +29,4 @@ show-failed-logs: True
 reason: True
 cluster-status: slurm-status.py
 max-status-checks-per-second: 10
+# localrules: all

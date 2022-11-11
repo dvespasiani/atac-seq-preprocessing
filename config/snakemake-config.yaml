@@ -1,5 +1,6 @@
 description: Snakemake configuration file for ATAC-seq preprocessing steps
 author: Davide Vespasiani
+project: atac-pipeline 
 
 ##==================##
 ##  I/O directories ##

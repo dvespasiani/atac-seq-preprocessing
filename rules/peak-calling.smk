@@ -1,7 +1,6 @@
 ##===========================##
 ## 10. Peak calling (MACS2)  ##
 ##===========================##
-priority = 1
 rule peakCalling:
   input:
     bam = rules.Tn5_shifted_sort.output,
@@ -14,8 +13,6 @@ rule peakCalling:
     narrowPeak = outdir + rulename_peak + "{combined_sample}-macs2_peaks.narrowPeak"
   group: 
     main
-  priority:
-    priority
   params:
     name = "{combined_sample}-macs2",
     outdir = outdir + rulename_peak,
@@ -42,15 +39,13 @@ rule rm_blacklisted_peaks:
     blacklist = blacklist
   group: 
     main
-  priority:
-    priority
   log:
     logs + rulename_peak + "{combined_sample}_blacklist_removed.log"
   shell:
     """
     bedtools intersect -v -a {input} -b {params.blacklist} \
     | awk 'BEGIN{{OFS="\\t"}} {{if ($5>1000) $5=1000; print $0}}' \
-    | grep -P 'chr[\dXY]+[ \t]'  | gzip -nc > {output} 2> {log}
+    | grep -P 'chr[\dXY]+[ \t]' | gzip -nc > {output} 2> {log}
     """
 
 ## Sort NarrowPeaks by column 8 in descending order,
@@ -66,8 +61,6 @@ rule sort_peaks:
     npeaks=npeaks
   group: 
     main
-  priority:
-    priority
   shell:
     """
     gunzip -nc {input} | sort -k 8gr,8gr | \
@@ -87,8 +80,6 @@ rule FE_peak_signal_tracks:
     outdir + rulename_peak + "{combined_sample}-macs2_FE.bdg"
   group: 
     main
-  priority:
-    priority
   log:
    logs + rulename_peak + "{combined_sample}-fe-peak-signal-track.log"
   shell:
@@ -108,8 +99,6 @@ rule clean_FE_signal:
     chrom_sizes = chrom_sizes
   group: 
     main
-  priority:
-    priority
   shell:
    """
    slopBed -i {input} -g {params.chrom_sizes} -b 0 \
@@ -123,8 +112,6 @@ rule sort_FE_bedGraph:
     outdir + rulename_peak + "{combined_sample}-fe-signal-sorted.bedgraph"
   group: 
     main
-  priority:
-    priority
   log:
    logs + rulename_peak + "{combined_sample}-sort-bedGraph.log"
   shell:
@@ -137,8 +124,6 @@ rule FE_bedGraph2bigWig:
    outdir + rulename_peak + "{combined_sample}-fe-signal.bigwig"
   group: 
     main
-  priority:
-    priority
   log:
    logs + rulename_peak + "{combined_sample}-bedGraph2bigWig.log"
   params:
@@ -161,8 +146,6 @@ rule sval:
    outdir + rulename_peak + "{combined_sample}-ppois-sval"
   group: 
     main
-  priority:
-    priority
   log:
    logs + rulename_peak + "{combined_sample}-sval-calculation.log"
   shell:
@@ -180,8 +163,6 @@ rule ppois_peak_signal_tracks:
     outdir + rulename_peak + "{combined_sample}-macs2_ppois.bdg"
   group: 
     main
-  priority:
-    priority
   log:
     logs + rulename_peak + "{combined_sample}-ppois-peak-signaltrack.log"
   run:
@@ -197,8 +178,6 @@ rule clean_ppois_signal:
     outdir + rulename_peak + "{combined_sample}-ppois-signal.bedgraph"
   group: 
     main
-  priority:
-    priority
   log:
    logs + rulename_peak + "{combined_sample}-clean-ppois-peaks.log"
   params:
@@ -216,8 +195,6 @@ rule sort_ppois_bedGraph:
     outdir + rulename_peak + "{combined_sample}-ppois-signal-sorted.bedgraph"
   group: 
     main
-  priority:
-    priority
   log:
    logs + rulename_peak + "{combined_sample}-sort-ppois-bedGraph.log"
   shell:
@@ -230,8 +207,6 @@ rule ppois_bedGraph2bigWig:
    outdir + rulename_peak + "{combined_sample}-ppois-signal.bigwig"
   group: 
     main
-  priority:
-    priority
   log:
    logs + rulename_peak + "{combined_sample}-ppois-bedGraph2bigWig.log"
   params:
@@ -252,8 +227,6 @@ rule frip:
     qcdir + "{combined_sample}-frip.txt"
   group: 
     main
-  priority:
-    priority
   log:
    logs + rulename_peak + "{combined_sample}-FRiP.log"
   run:
