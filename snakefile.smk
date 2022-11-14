@@ -5,38 +5,49 @@ import glob
 ##===================##
 ##   config params   ##
 ##===================##
-configfile: "config/snakemake-config.yaml"
-
-species = config['species']
-assembly = config['assembly']
-
-basedir = config['basedir']
-
-
-adapters = config['adapters']
-read_length = config['read_length']
-genome_size = config['genome_size']
-genome_index = config['genome_index']
-blacklist = config['blacklist']
-chrom_sizes = config['chrom_sizes']
-genome2bit_index = config['genome2bit_index']
-sample = config['samples']
-all_samples = config['all_samples']
-combined_sample = list(itertools.chain(*config['combined_sample'])) ## this flattens a list of lists
+configfile: "config/project_config.yaml"
 
 ##=================##
 ## I/O directories ##
 ##=================##
-inputdir = config['fastqdir']
-outdir = config['outdir']
-qcdir = config['qcdir']
-logs = config['logs']
-plots = config['plots']
-tables = config['tables']
+project_config = config['project_config']
+project_name = project_config['project']
+inputdir = project_config['datadir']
+outdir = project_config['outdir']
+qcdir = project_config['qcdir']
+logs = project_config['logs']
+plots = project_config['plots']
+tables = project_config['tables']
 
-##=================##
-##   Parameters    ##
-##=================##
+##===========##
+##  Species  ##
+##===========##
+species_config = config['species_info']
+species = species_config['species']
+assembly = species_config['assembly']
+genome_size = species_config['genome_size']
+genome_index = species_config['genome_index']
+blacklist = species_config['blacklist']
+genome2bit_index = species_config['genome2bit_index']
+chrom_sizes = species_config['chrom_sizes']
+
+##=====================##
+##   ATAC experiment   ##
+##=====================##
+atac_specifics = config['atac_specifics']
+adapters = atac_specifics['adapters']
+read_length = atac_specifics['read_length']
+
+##==============##
+##   Samples    ##
+##==============##
+sample = config['samples']
+all_samples = config['all_samples']
+combined_sample = list(itertools.chain(*config['combined_sample'])) ## this flattens a list of lists
+
+##================##
+##   QC params    ##
+##================##
 read_minQ = config['read_minQ']
 npeaks = config['npeaks']
 fragment_size = config['fragment_size']
@@ -44,7 +55,7 @@ shift = config['shift']
 pval_thresh = config['pval_thresh']
 
 ##=================##
-##     RULES       ##
+##     Rules       ##
 ##=================##
 main = 'main'
 qc = 'qc'
