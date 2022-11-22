@@ -1,12 +1,14 @@
 # ATAC-seq preprocessing pipeline
 ----
 # Table of Contents
+- [ATAC-seq preprocessing pipeline](#atac-seq-preprocessing-pipeline)
 - [Table of Contents](#table-of-contents)
   - [Project description](#project-description)
   - [Project set up](#project-set-up)
   - [Running the pipeline](#running-the-pipeline)
     - [Interactively](#interactively)
     - [In the background](#in-the-background)
+  - [**PS:**  Be sure to correctly specify the name AND location of your python virtual environment in the corresponding line in the `utils/run-on-cluster.sh` file! There should be no need to change anything else in there.](#ps--be-sure-to-correctly-specify-the-name-and-location-of-your-python-virtual-environment-in-the-corresponding-line-in-the-utilsrun-on-clustersh-file-there-should-be-no-need-to-change-anything-else-in-there)
   - [Pipeline overview](#pipeline-overview)
     - [FastQC](#fastqc)
     - [Adaptor trimming](#adaptor-trimming)
@@ -73,7 +75,7 @@ and specify this path in relative directives within the `config/snakemake-config
 * Create your own python virtual env and install some modules
 As indicated in the [Milton documentation](https://wehieduau.sharepoint.com/sites/rc2/SitePages/Installing-software.aspx?Mode=Edit#installing-software) is best practice to create your python virtual envirnoment where you can `pip install` all your packages. To do so, you need to run the following:
 ```
-module load python/<whatever.version>
+module load python/3.7.0
 virtualenv myvenv
 . myvenv/bin/activate
 ```
@@ -132,7 +134,7 @@ To run the pipeline on the background run the following lines:
 mkdir slurm-report 
 sbatch utils/run-on-cluster.sh
 ```
-
+**PS:**  Be sure to correctly specify the name AND location of your python virtual environment in the corresponding line in the `utils/run-on-cluster.sh` file! There should be no need to change anything else in there.
 ----
 ## Pipeline overview
 The pipeline contained in this repo goes through the following steps:
