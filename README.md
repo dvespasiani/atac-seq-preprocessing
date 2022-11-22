@@ -8,7 +8,6 @@
   - [Running the pipeline](#running-the-pipeline)
     - [Interactively](#interactively)
     - [In the background](#in-the-background)
-  - [**PS:**  Be sure to correctly specify the name AND location of your python virtual environment in the corresponding line in the `utils/run-on-cluster.sh` file! There should be no need to change anything else in there.](#ps--be-sure-to-correctly-specify-the-name-and-location-of-your-python-virtual-environment-in-the-corresponding-line-in-the-utilsrun-on-clustersh-file-there-should-be-no-need-to-change-anything-else-in-there)
   - [Pipeline overview](#pipeline-overview)
     - [FastQC](#fastqc)
     - [Adaptor trimming](#adaptor-trimming)
@@ -135,6 +134,7 @@ mkdir slurm-report
 sbatch utils/run-on-cluster.sh
 ```
 **PS:**  Be sure to correctly specify the name AND location of your python virtual environment in the corresponding line in the `utils/run-on-cluster.sh` file! There should be no need to change anything else in there.
+
 ----
 ## Pipeline overview
 The pipeline contained in this repo goes through the following steps:
