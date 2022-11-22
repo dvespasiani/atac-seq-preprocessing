@@ -1,7 +1,7 @@
 ##==========================##
 ## cluster config arguments ##
 ##==========================##
-snakefile: snakefile-preprocess.smk
+snakefile: snakefile.smk
 cluster:
   sbatch
     --cpus-per-task={resources.threads}

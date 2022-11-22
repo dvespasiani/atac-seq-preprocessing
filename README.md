@@ -1,3 +1,5 @@
+# ATAC-seq preprocessing pipeline
+----
 # Table of Contents
 - [Table of Contents](#table-of-contents)
   - [Project description](#project-description)
