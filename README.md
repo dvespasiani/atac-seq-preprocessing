@@ -29,9 +29,9 @@ If you do already have one then be sure the path it's in your `~/.bash_profile` 
 ```
 export TMPDIR=/vast/scratch/users/<your-username>/tmp
 ```
-This is fundamental to have, if not for managing files and resourses in the cluster, simply because some commands of this pipeline will fail as they will fill up your base disk quota in no time. Anyhow, once you have it, modify the corresponding entry within the `snakemake-config.yaml` file (see right below here).
+This is fundamental to have, if not for managing files and resourses in the cluster, simply because some commands of this pipeline will fail as they will fill up your base disk quota in no time. Anyhow, once you have it, modify the corresponding entry within the `project_config.yaml` file (see right below here).
 
-* Change the entries in the `config/snakemake-config.yaml` file to suit your needs, such as:
+* Change the entries in the `config/project_config.yaml` file to suit your needs, such as:
 ```
 species: your-species
 genome: your-species-genome
@@ -68,7 +68,7 @@ or you could donwload it from the [bowtie webpage](https://bowtie-bio.sourceforg
 cd path/to/your/bowtie2/index/genome
 wget  http://hgdownload.cse.ucsc.edu/goldenpath/<your-species-assembly>/bigZips/<your-species-assembly>.2bit 
 ```
-and specify this path in relative directives within the `config/snakemake-config.yaml` file.
+and specify this path in relative directives within the `config/project_config.yaml` file.
 
 * Create your own python virtual env and install some modules
 As indicated in the [Milton documentation](https://wehieduau.sharepoint.com/sites/rc2/SitePages/Installing-software.aspx?Mode=Edit#installing-software) is best practice to create your python virtual envirnoment where you can `pip install` all your packages. To do so, you need to run the following:
@@ -107,7 +107,7 @@ e.g., ./utils/subsample-files.sh -i /wehisan/general/user_managed/grpu_jchoi_0/r
 -o /wehisan/general/user_managed/grpu_jchoi_0/projects/davide/atac-pipeline/data/subsampled-files/ \
 -n 3000
 ```
-This script will extract the first `n = number of reads` from all the files listed in the `i = input dir`. You can then run the entire pipeline interactively on this subset of reads. However, if you do so, remember to correctly specify the location of your subsampled fastq files in the `config/snakemake-config.yaml` file, which is defined in the `fastqdir` directive. <br/>
+This script will extract the first `n = number of reads` from all the files listed in the `i = input dir`. You can then run the entire pipeline interactively on this subset of reads. However, if you do so, remember to correctly specify the location of your subsampled fastq files in the `config/project_config.yaml` file, which is defined in the `fastqdir` directive. <br/>
 
 Next, set up an interactive session on SLURM. I personally do it using my custom made script `run-interactively.sh`. This script reads all `salloc` arguments (e.g., mem/time etc..) specied in the `config/cluster_config.yaml` file (you can changed them to whatever you might need) and requests those resources without you having to write the entire `salloc` command each time. If you also want to use this utility then move the script outside the project directory and set up your interactive session as:
 
@@ -150,7 +150,7 @@ For ATAC-seq experiments, when running FastQC you can expect 3 modules returning
 3. Overrepresented sequences
 Check them anyhow in case there is something extremely weird in your dataset.
 ### Adaptor trimming
-I am using Trimmomatic to remove Illumina Nextera adapter sequeces which I have obtained [here](https://github.com/timflutre/trimmomatic/blob/master/adapters/NexteraPE-PE.fa). If you have other adapter sequences then simply make a fasta file with those sequences and change the `adapters:` directive in the `config/snakemake-config.yaml` file. To identify and then remove adapters, I am allowing for 2 max mismatches, a threshold of Q = 30 for PE palindrome read alignment (this can control for short adapter retentions at the 3' end of each read) and a threshold of Q = 10 for a simple alignment match between adapters and read. Finally, I am removing all initial/terminal sequences having a phred score <20 and all reads that, after these quality steps are < 20 bp long. <br/>
+I am using Trimmomatic to remove Illumina Nextera adapter sequeces which I have obtained [here](https://github.com/timflutre/trimmomatic/blob/master/adapters/NexteraPE-PE.fa). If you have other adapter sequences then simply make a fasta file with those sequences and change the `adapters:` directive in the `config/project_config.yaml` file. To identify and then remove adapters, I am allowing for 2 max mismatches, a threshold of Q = 30 for PE palindrome read alignment (this can control for short adapter retentions at the 3' end of each read) and a threshold of Q = 10 for a simple alignment match between adapters and read. Finally, I am removing all initial/terminal sequences having a phred score <20 and all reads that, after these quality steps are < 20 bp long. <br/>
 **PS:** from the trimmomatic manual, each match increases the Q score by 0.6 whereas mismatches reduces it by Q/10. Thus when Q = 30, there should be around 50 matches between your sequence and the adapters, whereas Q = 10, there should be around 16 matches. 
 ### Genome alignment 
 I am using Bowtie2 to align reads to the genome assembly of the species of interest. Bowtie2 alignment parameters are defined as per ENCODE.
