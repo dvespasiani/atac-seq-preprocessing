@@ -1,7 +1,6 @@
 # ATAC-seq preprocessing pipeline
 ----
 # Table of Contents
-- [ATAC-seq preprocessing pipeline](#atac-seq-preprocessing-pipeline)
 - [Table of Contents](#table-of-contents)
   - [Project description](#project-description)
   - [Project set up](#project-set-up)
@@ -44,7 +43,7 @@ fastqdir: your-dir-containing-fastq-files
 etc....
 
 ```
-Note that I am using full paths for most directives in the config yaml file. You could make them relative to a base directory to avoid repetition but you'll need to combine them in the main `snakemake-preprocess.smk` file.
+Note that I am using full paths for most directives in the config yaml file. You could make them relative to a base directory to avoid repetition but you'll need to combine them in the main `snakemake.smk` file.
 
 * Make sure you have all the information for your species, such as:
    - a chrom.sizes file containing the chromosome sizes. This can be obtained either from UCSC (the link should be something like `http://hgdownload.soe.ucsc.edu/goldenPath/<your-species-assembly>/bigZips/<your-species-assembly>.chrom.sizes`) or, alternatively, by running
