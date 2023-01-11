@@ -82,7 +82,7 @@ Afterwards you can install all your python modules. Here I am assuming you have 
 
 Regarding the python modules I am using in this pipeline, make sure to have installed in your virtual environment these modules: `pybedtools`, `argparse`, `pandas` and `subprocess` before running this pipeline.
 
-* Install all required R libraries such as `yaml`, `data.table`, `GenomicAlignments`, `ATACseqQC`, `csaw`, `GenomicFeatures`, `TxDb.<your-species>.UCSC.<your-species-assembly>.knownGene`, `UpSetR`. 
+* Install all required R libraries such as `yaml`, `data.table`, `GenomicAlignments`, `ATACseqQC`, `csaw`, `ggpubr`,`GenomicFeatures`, `TxDb.<your-species>.UCSC.<your-species-assembly>.knownGene`, `UpSetR`. 
 All the other libraries I am using here should be pretty standard.
 
 * Once you know how many samples you are preprocessing, replace the following lines within the `utils/r-utils.R`:
