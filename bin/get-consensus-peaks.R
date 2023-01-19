@@ -1,10 +1,5 @@
 
 ## Script used to define the set of consensus peaks identified across multiple samples
-library(data.table)
-library(magrittr)
-library(ggplot2)
-library(ggpubr)
-library(dplyr)
 library(UpSetR)
 library(GenomicRanges)
 
@@ -40,19 +35,23 @@ overlapping_peakIDs <- lapply(
         return(peakIDs)
 })
 
-individual_peak_support <- unlist(copy(overlapping_peakIDs))
+get_support_peakIDs <- function(supportPeaks){ 
+        common_peaks <- Reduce(intersect,supportPeaks)
+        support_table <- as.data.table(fromList(supportPeaks))
+        support_table <- support_table[,support := rowSums(support_table)][,peakID := unique(unlist(supportPeaks))][,c('peakID','support')]
+        return(support_table)
+}
 
-individual_peak_support <- data.table(peakID = individual_peak_support)
-individual_peak_support <- individual_peak_support[,support:=.N,by=.(peakID)]%>%unique()
-
-combined_peak_support <- merge(copy(combined_peak), copy(individual_peak_support), by = "peakID", all = TRUE)
-combined_peak_support[is.na(combined_peak_support)] <- 0
+peak_support <- get_support_peakIDs(overlapping_peakIDs)
+combined_peaks_support <- merge(copy(combined_peak), copy(peak_support), by = "peakID", all = TRUE)
+combined_peaks_support[is.na(combined_peaks_support)] <- 0
+combined_peaks_support <- combined_peaks_support%>%dplyr::select(all_of(grange_cols),'peakID','support')
 
 
 cat("Plotting an Upset plot to visualise how many samples support the peaks identified in the combined file \n")
 
 pdf(output_plot,width=7,height=7)
-upset(fromList(overlapping_peakIDs),nsets = length(samples), order.by = "freq")
+upset(fromList(overlapping_peakIDs),nsets = length(overlapping_peakIDs), order.by = "freq")
 dev.off()
 
 cat("Exporting a consensus peak bed file with the number of samples supporting the peaks identified in the combined file \n")
@@ -60,3 +59,7 @@ cat("Exporting a consensus peak bed file with the number of samples supporting t
 ## export new set of peaks
 fwrite(combined_peak_support,outfile,sep='\t',col.names=T,quote=F,row.names=F)
 cat("Done \n")
+
+
+
+

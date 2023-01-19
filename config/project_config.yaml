@@ -8,7 +8,7 @@ project: atac-pipeline
 ## list here all project main input/output directories
 project_config: {
     baseDir:  /stornext/General/data/user_managed/grpu_jchoi_0/projects/davide,
-    project: atac-pipeline,
+    project: atac-pipeline, ## change this
     datadir: data/subsampled-files/, ## change this to whichever is your input dir containing fastq files
     outdir: out/,
     qcdir: out/qc/,
